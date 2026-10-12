@@ -1,0 +1,147 @@
+[
+  {
+    "id": "react-19-removed-reactdom-render",
+    "framework": "react",
+    "fromVersion": ">=18.0.0 <19.0.0",
+    "toVersion": ">=19.0.0",
+    "severity": "breaking",
+    "title": "ReactDOM.render has been removed in React 19",
+    "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-reactdom-render",
+    "description": "ReactDOM.render was deprecated in React 18 and is completely removed in React 19. Using it will result in a runtime error.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["ReactDOM.render", "render("],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "ReactDOM.render"
+      }
+    },
+    "remediation": {
+      "summary": "Use createRoot from 'react-dom/client' instead.",
+      "exampleBefore": "import ReactDOM from 'react-dom';\nReactDOM.render(<App />, document.getElementById('root'));",
+      "exampleAfter": "import { createRoot } from 'react-dom/client';\nconst root = createRoot(document.getElementById('root')!);\nroot.render(<App />);"
+    }
+  },
+  {
+    "id": "react-19-removed-unmount-component",
+    "framework": "react",
+    "fromVersion": ">=18.0.0 <19.0.0",
+    "toVersion": ">=19.0.0",
+    "severity": "breaking",
+    "title": "ReactDOM.unmountComponentAtNode has been removed",
+    "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-reactdom-unmountcomponentatnode",
+    "description": "unmountComponentAtNode has been removed in favor of root.unmount().",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["unmountComponentAtNode"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "ReactDOM.unmountComponentAtNode"
+      }
+    },
+    "remediation": {
+      "summary": "Use root.unmount() on the createRoot instance.",
+      "exampleBefore": "ReactDOM.unmountComponentAtNode(container);",
+      "exampleAfter": "root.unmount();"
+    }
+  },
+  {
+    "id": "react-19-removed-find-dom-node",
+    "framework": "react",
+    "fromVersion": ">=18.0.0 <19.0.0",
+    "toVersion": ">=19.0.0",
+    "severity": "breaking",
+    "title": "findDOMNode has been removed",
+    "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-reactdom-finddomnode",
+    "description": "findDOMNode was an escape hatch that breaks React's tree abstraction and has been removed.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["findDOMNode"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "ReactDOM.findDOMNode"
+      }
+    },
+    "remediation": {
+      "summary": "Pass a ref directly to the DOM element.",
+      "exampleBefore": "const node = ReactDOM.findDOMNode(this);",
+      "exampleAfter": "const node = this.myRef.current;"
+    }
+  },
+  {
+    "id": "react-19-removed-proptypes",
+    "framework": "react",
+    "fromVersion": ">=18.0.0 <19.0.0",
+    "toVersion": ">=19.0.0",
+    "severity": "deprecation",
+    "title": "React.PropTypes is removed from core package",
+    "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-proptypes",
+    "description": "PropTypes has been removed from React. Use TypeScript or the separate 'prop-types' package.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["React.PropTypes"],
+      "astPattern": {
+        "type": "memberExpression",
+        "object": "React",
+        "property": "PropTypes"
+      }
+    },
+    "remediation": {
+      "summary": "Import from 'prop-types' package or migrate to TypeScript interfaces.",
+      "exampleBefore": "MyComponent.propTypes = React.PropTypes.string;",
+      "exampleAfter": "import PropTypes from 'prop-types';\nMyComponent.propTypes = PropTypes.string;"
+    }
+  },
+  {
+    "id": "react-19-removed-string-refs",
+    "framework": "react",
+    "fromVersion": ">=18.0.0 <19.0.0",
+    "toVersion": ">=19.0.0",
+    "severity": "breaking",
+    "title": "Legacy string refs are removed",
+    "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-string-refs",
+    "description": "Using string literals for ref props (e.g. ref=\"myInput\") is completely removed in React 19.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["ref="],
+      "astPattern": {
+        "type": "jsxAttribute",
+        "attribute": "ref",
+        "disallowLiteralString": true
+      }
+    },
+    "remediation": {
+      "summary": "Use useRef or callback refs instead of string identifiers.",
+      "exampleBefore": "<input ref=\"usernameInput\" />",
+      "exampleAfter": "const inputRef = useRef<HTMLInputElement>(null);\n<input ref={inputRef} />"
+    }
+  },
+  {
+    "id": "react-19-removed-legacy-lifecycles",
+    "framework": "react",
+    "fromVersion": ">=18.0.0 <19.0.0",
+    "toVersion": ">=19.0.0",
+    "severity": "deprecation",
+    "title": "Legacy lifecycle methods are removed",
+    "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-legacy-context",
+    "description": "componentWillMount, componentWillReceiveProps, and componentWillUpdate have been removed.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": [
+        "componentWillMount",
+        "componentWillReceiveProps",
+        "componentWillUpdate"
+      ],
+      "astPattern": {
+        "type": "identifier",
+        "name": "componentWillReceiveProps",
+        "context": "method"
+      }
+    },
+    "remediation": {
+      "summary": "Migrate to componentDidMount, componentDidUpdate, or React function components with useEffect.",
+      "exampleBefore": "componentWillReceiveProps(nextProps) { ... }",
+      "exampleAfter": "componentDidUpdate(prevProps) { ... }"
+    }
+  }
+]

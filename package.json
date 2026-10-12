@@ -1,0 +1,101 @@
+{
+  "name": "antigravity",
+  "displayName": "Antigravity - Framework Migration Assistant",
+  "description": "Scans your codebase on framework upgrades (Next.js, React, etc.) and generates actionable migration reports.",
+  "version": "0.1.0",
+  "publisher": "antigravity",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages",
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:package.json",
+    "onCommand:antigravity.scanProject",
+    "onCommand:antigravity.inspectDependencies",
+    "onCommand:antigravity.saveReport"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "antigravity.scanProject",
+        "title": "Antigravity: Run Migration Scan",
+        "category": "Antigravity"
+      },
+      {
+        "command": "antigravity.inspectDependencies",
+        "title": "Antigravity: Inspect Tracked Dependencies",
+        "category": "Antigravity"
+      },
+      {
+        "command": "antigravity.saveReport",
+        "title": "Antigravity: Save Migration Report to File",
+        "category": "Antigravity"
+      }
+    ],
+    "configuration": {
+      "title": "Antigravity",
+      "properties": {
+        "antigravity.autoScanOnDependencyChange": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "always",
+            "never"
+          ],
+          "default": "ask",
+          "description": "How Antigravity should respond when dependency version upgrades are detected."
+        },
+        "antigravity.saveReportToFile": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to automatically save migration reports as physical files in the workspace."
+        },
+        "antigravity.reportOutputPath": {
+          "type": "string",
+          "default": "MIGRATION_REPORT.md",
+          "description": "File path where migration reports will be saved when enabled."
+        },
+        "antigravity.excludeGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/.git/**",
+            "**/.next/**"
+          ],
+          "description": "Glob patterns to exclude from codebase scans."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "compile": "tsc -p ./ --noEmit",
+    "watch": "node esbuild.js --watch",
+    "build": "tsc -p ./ --noEmit && node esbuild.js --production",
+    "test": "tsx --test test/**/*.test.ts"
+  },
+  "dependencies": {
+    "semver": "^7.6.3"
+  },
+  "devDependencies": {
+    "@babel/parser": "^7.26.2",
+    "@babel/traverse": "^7.25.9",
+    "@types/babel__traverse": "^7.20.6",
+    "@types/node": "^20.17.0",
+    "@types/semver": "^7.5.8",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.6.3"
+  }
+}
