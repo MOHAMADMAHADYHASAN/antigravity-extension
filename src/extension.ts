@@ -160,7 +160,111 @@ export function activate(context: vscode.ExtensionContext) {
     await ReportViewer.saveReportToFile();
   });
 
-  context.subscriptions.push(scanCommand, inspectCommand, saveReportCommand);
+  // 4. Command: Run Custom Version Scan (Interactive User-Selected Versions)
+  const customScanCommand = vscode.commands.registerCommand('antigravity.customScan', async () => {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
+      vscode.window.showWarningMessage('Antigravity: Please open a workspace folder to run a scan.');
+      return;
+    }
+
+    const workspaceRoot = workspaceFolders[0].uri.fsPath;
+    const supportedFrameworks = registry.getSupportedFrameworks();
+
+    // 1. Select framework
+    const selectedFramework = await vscode.window.showQuickPick(supportedFrameworks, {
+      placeHolder: 'Select framework to analyze',
+      title: 'Antigravity: Select Framework'
+    });
+    if (!selectedFramework) {
+      return;
+    }
+
+    // 2. Prompt for current version
+    const fromVersion = await vscode.window.showInputBox({
+      title: `Antigravity: ${selectedFramework} Current Version`,
+      prompt: `Enter your CURRENT ${selectedFramework} version`,
+      placeHolder: 'e.g., 14.2.0 or 14',
+      validateInput: (value) => (value.trim() ? null : 'Current version cannot be empty')
+    });
+    if (!fromVersion) {
+      return;
+    }
+
+    // 3. Prompt for target version
+    const toVersion = await vscode.window.showInputBox({
+      title: `Antigravity: ${selectedFramework} Target Version`,
+      prompt: `Enter your TARGET ${selectedFramework} version`,
+      placeHolder: 'e.g., 15.0.0 or 15',
+      validateInput: (value) => (value.trim() ? null : 'Target version cannot be empty')
+    });
+    if (!toVersion) {
+      return;
+    }
+
+    // 4. Filter applicable rules dynamically from RuleRegistry
+    const rulesToRun = registry.getRulesForUpgrade(selectedFramework, fromVersion, toVersion);
+
+    if (rulesToRun.length === 0) {
+      vscode.window.showInformationMessage(
+        `Antigravity: No migration rules found for ${selectedFramework} (${fromVersion} → ${toVersion}).`
+      );
+      return;
+    }
+
+    const config = vscode.workspace.getConfiguration('antigravity');
+    const excludeGlobs = config.get<string[]>('excludeGlobs', []);
+
+    // 5. Run Scan with progress indicator
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: `Antigravity: Scanning for ${selectedFramework} (${fromVersion} → ${toVersion}) breaking changes...`,
+        cancellable: true
+      },
+      async (progress, token) => {
+        let lastReported = 0;
+
+        const result = await ScanEngine.runScan({
+          rootPath: workspaceRoot,
+          rules: rulesToRun,
+          excludeGlobs,
+          cancellationToken: token,
+          onProgress: (scanned, total, currentFile) => {
+            const pct = Math.floor((scanned / total) * 100);
+            if (pct >= lastReported + 5 || scanned === total) {
+              lastReported = pct;
+              progress.report({
+                message: `${scanned}/${total} files (${path.basename(currentFile)})`,
+                increment: 5
+              });
+            }
+          }
+        });
+
+        if (token.isCancellationRequested) {
+          vscode.window.showInformationMessage('Antigravity: Migration scan was cancelled.');
+          return;
+        }
+
+        // 6. Generate and present Markdown report
+        const report = MarkdownGenerator.generate(result, {
+          workspaceRoot,
+          upgradeDetails: [
+            {
+              framework: selectedFramework,
+              oldVersion: fromVersion,
+              newVersion: toVersion
+            }
+          ]
+        });
+
+        await ReportViewer.showReport(report);
+      }
+    );
+  });
+
+  context.subscriptions.push(scanCommand, customScanCommand, inspectCommand, saveReportCommand);
 }
 
 /**

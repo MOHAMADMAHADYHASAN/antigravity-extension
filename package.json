@@ -21,6 +21,7 @@
     "onStartupFinished",
     "workspaceContains:package.json",
     "onCommand:antigravity.scanProject",
+    "onCommand:antigravity.customScan",
     "onCommand:antigravity.inspectDependencies",
     "onCommand:antigravity.saveReport"
   ],
@@ -29,6 +30,11 @@
       {
         "command": "antigravity.scanProject",
         "title": "Run Migration Scan",
+        "category": "Antigravity"
+      },
+      {
+        "command": "antigravity.customScan",
+        "title": "Run Custom Version Scan",
         "category": "Antigravity"
       },
       {
