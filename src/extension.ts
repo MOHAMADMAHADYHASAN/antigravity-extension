@@ -15,6 +15,9 @@ export function activate(context: vscode.ExtensionContext) {
   console.log('Antigravity - Framework Migration Assistant is now active.');
 
   const registry = RuleRegistry.getInstance();
+  // Asynchronously pre-fetch remote rules in the background
+  registry.fetchRemoteRules().catch(() => {});
+
   const watcher = new DependencyWatcher(context);
   watcher.activate();
   context.subscriptions.push(watcher);
@@ -40,6 +43,11 @@ export function activate(context: vscode.ExtensionContext) {
       const packageJsonUri = vscode.Uri.file(path.join(workspaceRoot, 'package.json'));
       const raw = await vscode.workspace.fs.readFile(packageJsonUri);
       const text = new TextDecoder('utf-8').decode(raw);
+
+      // Dynamically load remote rules for project based on manifest and detected dependencies
+      const localRulesDir = path.join(workspaceRoot, 'remote-rules');
+      await registry.loadRemoteRulesForProject(text, localRulesDir);
+
       const currentDeps = VersionTracker.extractDependencies(text);
       const savedDeps = VersionTracker.getSavedSnapshot(context, packageJsonUri.fsPath);
 
@@ -201,6 +209,23 @@ export function activate(context: vscode.ExtensionContext) {
     if (!toVersion) {
       return;
     }
+
+    // Attempt to load remote rules for workspace dependencies if available
+    try {
+      const packageJsonUri = vscode.Uri.file(path.join(workspaceRoot, 'package.json'));
+      const raw = await vscode.workspace.fs.readFile(packageJsonUri);
+      const text = new TextDecoder('utf-8').decode(raw);
+      await registry.loadRemoteRulesForProject(text, path.join(workspaceRoot, 'remote-rules'));
+    } catch {
+      // Continue with local rules if package.json unavailable or offline
+    }
+
+    // Ensure remote rules for the selected framework & target version are fetched if available
+    await registry.fetchRemoteRules({
+      technology: selectedFramework,
+      version: toVersion,
+      localFallbackDir: path.join(workspaceRoot, 'remote-rules')
+    }).catch(() => {});
 
     // 4. Filter applicable rules dynamically from RuleRegistry
     const rulesToRun = registry.getRulesForUpgrade(selectedFramework, fromVersion, toVersion);

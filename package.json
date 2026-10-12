@@ -88,6 +88,11 @@
             "**/*.min.js"
           ],
           "description": "Glob patterns to exclude from codebase scans."
+        },
+        "antigravity.remoteManifestUrl": {
+          "type": "string",
+          "default": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/manifest.json",
+          "description": "URL of the central manifest.json for version-based remote rules loading."
         }
       }
     }

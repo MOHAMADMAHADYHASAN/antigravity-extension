@@ -1,0 +1,39 @@
+{
+  "name": "Antigravity Remote Rules Catalog",
+  "version": "1.0.0",
+  "description": "Remote-hosted framework breaking change rules for the Antigravity migration assistant.",
+  "repository": "https://github.com/MOHAMADMAHADYHASAN/antigravity-extension",
+  "baseUrl": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules",
+  "rulesets": [
+    {
+      "id": "nextjs-16",
+      "framework": "next",
+      "targetVersion": "16",
+      "fromVersion": ">=15.0.0 <16.0.0",
+      "toVersion": ">=16.0.0",
+      "file": "nextjs-16.json",
+      "ruleCount": 10,
+      "url": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-16.json"
+    },
+    {
+      "id": "nextjs-15",
+      "framework": "next",
+      "targetVersion": "15",
+      "fromVersion": ">=14.0.0 <15.0.0",
+      "toVersion": ">=15.0.0",
+      "file": "nextjs-15.json",
+      "ruleCount": 15,
+      "url": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-15.json"
+    },
+    {
+      "id": "react-19",
+      "framework": "react",
+      "targetVersion": "19",
+      "fromVersion": ">=18.0.0 <19.0.0",
+      "toVersion": ">=19.0.0",
+      "file": "react.json",
+      "ruleCount": 6,
+      "url": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/react.json"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85.0-blue.svg)](https://code.visualstudio.com/)
-[![Tests](https://img.shields.io/badge/Tests-36%2F36%20Passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-71%2F71%20Passing-brightgreen.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A lightweight, high-performance VS Code extension designed to streamline framework and library upgrades (**Next.js 14 &rarr; 15 &rarr; 16**, **React 18 &rarr; 19**, and beyond).
@@ -14,6 +14,7 @@ Instead of guessing what broke after running `npm install`, **Antigravity** dete
 ## ⚡ Features
 
 - **Real-Time Version Bump Detection**: Monitors `package.json` for upgrades to tracked frameworks (Next.js, React). Debounced to avoid interfering with package installations.
+- **🌐 Dynamic Version-Based Remote Rules Loading**: Automatically queries a central `manifest.json` on GitHub Raw URLs, resolving exact major versions (e.g. Next.js 15, Next.js 16) or default rules with built-in caching and offline fallback.
 - **🏎️ Two-Stage Static Code Analysis**:
   - **Stage 1 (Fast Token Pre-Filter)**: Eliminates 90–95% of non-candidate files in milliseconds without parsing the AST.
   - **Stage 2 (Precision AST Parser)**: Uses `@babel/parser` & `@babel/traverse` to verify AST nodes, ensuring zero false positives and extracting 1-indexed lines, columns, and code snippets.
@@ -68,6 +69,68 @@ Instead of guessing what broke after running `npm install`, **Antigravity** dete
 
 ---
 
+## 🌐 Version-Based Remote Rules & Central Manifest
+
+The extension features a scalable remote rules system powered by a central `manifest.json` hosted on GitHub Raw CDN.
+
+### Remote Repository Structure
+
+```text
+antigravity-extension/
+└── remote-rules/
+    ├── manifest.json     # Central version mapping manifest
+    ├── nextjs-15.json    # Next.js 14 -> 15 breaking changes (15 rules)
+    ├── nextjs-16.json    # Next.js 15 -> 16 breaking changes (10 rules)
+    ├── react.json        # React 18 -> 19 breaking changes (6 rules)
+    └── index.json        # Extended ruleset catalog metadata
+```
+
+### Central Manifest (`remote-rules/manifest.json`)
+
+The manifest maps technology identifiers and major version numbers (or `default`) to direct raw URLs:
+
+```json
+{
+  "nextjs": {
+    "15": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-15.json",
+    "16": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-16.json"
+  },
+  "next": {
+    "15": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-15.json",
+    "16": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-16.json"
+  },
+  "react": {
+    "default": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/react.json",
+    "19": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/react.json"
+  }
+}
+```
+
+Manifest URL:
+`https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/manifest.json`
+
+### Automatic Technology & Version Detection
+
+1. **Detection**: On scan or dependency change, Antigravity reads the workspace's `package.json` and detects technologies and their major versions (e.g., `next: "^15.1.0"` &rarr; `nextjs`, major version `15`).
+2. **Resolution**:
+   - For **Next.js 15**, it resolves `nextjs-15.json`.
+   - For **Next.js 16**, it resolves `nextjs-16.json`.
+   - For **React**, if no exact major version matches, it resolves the `default` entry (`react.json`).
+   - If an unsupported version is found (e.g. Next.js 13 without a `default` entry), it cleanly skips loading to prevent running incompatible rules.
+3. **Caching**: In-memory caching with a 10-minute TTL avoids duplicate network requests during iterative scans.
+4. **Resilience & Offline Fallback**:
+   - If the remote GitHub URL is unreachable or network is offline, the extension falls back to local files in `remote-rules/`.
+   - If local files are unavailable, built-in rules compiled directly into the extension continue running without interruption.
+   - Network timeouts, HTTP errors, or malformed JSON payloads are handled gracefully and never crash the extension.
+
+### Adding Rules for a New Technology or Version
+
+1. **Create the Rule JSON File**: Add `remote-rules/<technology>-<version>.json` (e.g. `remote-rules/typescript.json`).
+2. **Validate Schema**: Ensure the file contains a valid JSON array of `MigrationRule` objects (`id`, `framework`, `fromVersion`, `toVersion`, `detection`, `remediation`).
+3. **Update Manifest**: Add the version mapping or `"default"` URL in `remote-rules/manifest.json`.
+
+---
+
 ## ⌨️ Extension Commands
 
 Press `Ctrl+Shift+P` (or `Cmd+Shift+P`) to open the Command Palette:
@@ -100,7 +163,8 @@ Configure in your VS Code `settings.json`:
     "**/prisma/**",
     "**/.prisma/**",
     "**/*.min.js"
-  ]
+  ],
+  "antigravity.remoteManifestUrl": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/manifest.json"
 }
 ```
 
@@ -108,6 +172,7 @@ Configure in your VS Code `settings.json`:
 - `antigravity.saveReportToFile`: Automatically saves `MIGRATION_REPORT.md` on every scan.
 - `antigravity.reportOutputPath`: Custom destination path for exported reports.
 - `antigravity.excludeGlobs`: Glob patterns to ignore during codebase scans.
+- `antigravity.remoteManifestUrl`: Central manifest URL for remote rules loading and auto-updates.
 
 ---
 
@@ -136,7 +201,7 @@ cd antigravity-extension
 # Install dependencies
 npm install
 
-# Run automated test suites (36 unit & integration tests)
+# Run automated test suites (71 unit & integration tests)
 npm test
 
 # Build production bundle

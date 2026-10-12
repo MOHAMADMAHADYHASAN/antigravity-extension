@@ -1,0 +1,14 @@
+{
+  "nextjs": {
+    "15": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-15.json",
+    "16": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-16.json"
+  },
+  "next": {
+    "15": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-15.json",
+    "16": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-16.json"
+  },
+  "react": {
+    "default": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/react.json",
+    "19": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/react.json"
+  }
+}
