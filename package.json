@@ -2,8 +2,12 @@
   "name": "antigravity",
   "displayName": "Antigravity - Framework Migration Assistant",
   "description": "Scans your codebase on framework upgrades (Next.js, React, etc.) and generates actionable migration reports.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "antigravity",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MOHAMADMAHADYHASAN/antigravity-extension"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -14,6 +18,7 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
+    "onStartupFinished",
     "workspaceContains:package.json",
     "onCommand:antigravity.scanProject",
     "onCommand:antigravity.inspectDependencies",
@@ -23,17 +28,17 @@
     "commands": [
       {
         "command": "antigravity.scanProject",
-        "title": "Antigravity: Run Migration Scan",
+        "title": "Run Migration Scan",
         "category": "Antigravity"
       },
       {
         "command": "antigravity.inspectDependencies",
-        "title": "Antigravity: Inspect Tracked Dependencies",
+        "title": "Inspect Tracked Dependencies",
         "category": "Antigravity"
       },
       {
         "command": "antigravity.saveReport",
-        "title": "Antigravity: Save Migration Report to File",
+        "title": "Save Migration Report to File",
         "category": "Antigravity"
       }
     ],
@@ -82,7 +87,8 @@
     "compile": "tsc -p ./ --noEmit",
     "watch": "node esbuild.js --watch",
     "build": "tsc -p ./ --noEmit && node esbuild.js --production",
-    "test": "tsx --test test/**/*.test.ts"
+    "test": "tsx --test test/**/*.test.ts",
+    "release": "npm version patch && npx @vscode/vsce package --baseContentUrl https://github.com/MOHAMADMAHADYHASAN/antigravity-extension --baseImagesUrl https://github.com/MOHAMADMAHADYHASAN/antigravity-extension"
   },
   "dependencies": {
     "semver": "^7.6.3"
