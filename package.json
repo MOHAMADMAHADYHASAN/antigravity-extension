@@ -2,7 +2,7 @@
   "name": "antigravity",
   "displayName": "Antigravity - Framework Migration Assistant",
   "description": "Scans your codebase on framework upgrades (Next.js, React, etc.) and generates actionable migration reports.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "antigravity",
   "engines": {
     "vscode": "^1.85.0"
