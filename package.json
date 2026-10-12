@@ -81,7 +81,11 @@
             "**/dist/**",
             "**/build/**",
             "**/.git/**",
-            "**/.next/**"
+            "**/.next/**",
+            "**/generated/**",
+            "**/prisma/**",
+            "**/.prisma/**",
+            "**/*.min.js"
           ],
           "description": "Glob patterns to exclude from codebase scans."
         }

@@ -95,7 +95,11 @@ Configure in your VS Code `settings.json`:
     "**/dist/**",
     "**/build/**",
     "**/.git/**",
-    "**/.next/**"
+    "**/.next/**",
+    "**/generated/**",
+    "**/prisma/**",
+    "**/.prisma/**",
+    "**/*.min.js"
   ]
 }
 ```
