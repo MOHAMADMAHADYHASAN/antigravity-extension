@@ -24,6 +24,24 @@ describe('RuleRegistry', () => {
     assert.ok(ruleIds.includes('next-15-app-router-legacy-router'), 'Should include legacy router rule');
   });
 
+  it('should return Next.js 16 rules when upgrading from 15.0.0 to 16.0.0', () => {
+    const rules = registry.getRulesForUpgrade('next', '15.0.0', '16.0.0');
+    assert.ok(rules.length >= 8, 'Should match Next.js 16 breaking changes');
+
+    const ruleIds = rules.map((r) => r.id);
+    assert.ok(ruleIds.includes('next-16-async-params'), 'Should include async params rule');
+    assert.ok(ruleIds.includes('next-16-middleware-to-proxy'), 'Should include middleware to proxy rule');
+    assert.ok(ruleIds.includes('next-16-amp-removed'), 'Should include AMP removed rule');
+    assert.ok(ruleIds.includes('next-16-unstable-cache-deprecated'), 'Should include unstable_cache deprecated rule');
+  });
+
+  it('should return combined 15 and 16 rules for multi-major jump from 14.2.0 to 16.0.0', () => {
+    const rules = registry.getRulesForUpgrade('next', '14.2.0', '16.0.0');
+    const ruleIds = rules.map((r) => r.id);
+    assert.ok(ruleIds.includes('next-15-async-cookies'), 'Should include Next 15 rules');
+    assert.ok(ruleIds.includes('next-16-async-params'), 'Should include Next 16 rules');
+  });
+
   it('should return React 19 rules when upgrading from 18.2.0 to 19.0.0', () => {
     const rules = registry.getRulesForUpgrade('react', '^18.2.0', '^19.0.0');
     assert.ok(rules.length >= 5, 'Should match React 19 breaking changes');

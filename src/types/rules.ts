@@ -17,8 +17,8 @@ export interface CallExpressionPattern {
 
 export interface MemberExpressionPattern {
   type: 'memberExpression';
-  object: string; // e.g. "React", "ReactDOM"
-  property: string; // e.g. "PropTypes", "findDOMNode"
+  object: string; // e.g. "React", "ReactDOM", "params", "request"
+  property?: string; // e.g. "PropTypes", "findDOMNode", or optional for any property
 }
 
 export interface ImportPattern {
@@ -37,8 +37,8 @@ export interface JsxAttributePattern {
 
 export interface IdentifierPattern {
   type: 'identifier';
-  name: string; // e.g. "componentWillReceiveProps"
-  context?: 'method' | 'property' | 'any';
+  name: string; // e.g. "componentWillReceiveProps", "middleware"
+  context?: 'method' | 'property' | 'declaration' | 'any';
 }
 
 export interface AsyncRequestApiPattern {

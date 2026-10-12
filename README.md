@@ -2,10 +2,10 @@
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85.0-blue.svg)](https://code.visualstudio.com/)
-[![Tests](https://img.shields.io/badge/Tests-29%2F29%20Passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-36%2F36%20Passing-brightgreen.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A lightweight, high-performance VS Code extension designed to streamline framework and library upgrades (**Next.js 14 &rarr; 15**, **React 18 &rarr; 19**, and beyond).
+A lightweight, high-performance VS Code extension designed to streamline framework and library upgrades (**Next.js 14 &rarr; 15 &rarr; 16**, **React 18 &rarr; 19**, and beyond).
 
 Instead of guessing what broke after running `npm install`, **Antigravity** detects version bumps in your `package.json`, runs an ultra-fast two-stage static AST scan across your codebase, and generates a developer-friendly **Migration Document / Update Report** in Markdown with clickable file & line numbers.
 
@@ -17,7 +17,7 @@ Instead of guessing what broke after running `npm install`, **Antigravity** dete
 - **🏎️ Two-Stage Static Code Analysis**:
   - **Stage 1 (Fast Token Pre-Filter)**: Eliminates 90–95% of non-candidate files in milliseconds without parsing the AST.
   - **Stage 2 (Precision AST Parser)**: Uses `@babel/parser` & `@babel/traverse` to verify AST nodes, ensuring zero false positives and extracting 1-indexed lines, columns, and code snippets.
-- **🎯 Interactive Custom Version Scan**: Choose any framework and enter arbitrary source & target versions (e.g. 14 &rarr; 15) to dynamically filter migration rules and scan on-demand.
+- **🎯 Interactive Custom Version Scan**: Choose any framework and enter arbitrary source & target versions (e.g. 14 &rarr; 15, 15 &rarr; 16) to dynamically filter migration rules and scan on-demand.
 - **📑 Actionable Markdown Reports**:
   - Automatically opens an in-memory Markdown preview side-by-side (`markdown.showPreviewToSide`).
   - Contains clickable line navigation links (e.g. `[app/api/auth/route.ts:4](file:///...#L4)`).
@@ -28,6 +28,18 @@ Instead of guessing what broke after running `npm install`, **Antigravity** dete
 ---
 
 ## 🛠️ Supported Framework Rulesets
+
+### Next.js 15 &rarr; 16 (10 Rules)
+- **Async `params` prop**: Flags synchronous `params.slug` or `params.id` in Pages and Layouts (must be `await params`).
+- **Async `searchParams` prop**: Flags synchronous `searchParams` access (must be `await searchParams`).
+- **`middleware` replaced by `proxy`**: Flags legacy `export function middleware` convention in favor of `proxy.ts`.
+- **AMP support removed**: Flags imports from `next/amp` and `useAmp()`.
+- **`unstable_cache` deprecated**: Flags `unstable_cache()` in favor of the `'use cache'` directive and `cacheLife()`.
+- **`revalidateTag` profile changes**: Flags legacy `revalidateTag()` calls in favor of `updateTag()` / `cacheTag()`.
+- **`serverRuntimeConfig` / `publicRuntimeConfig` removed**: Flags removed configs in `next.config.js`.
+- **Turbopack custom `webpack` config**: Flags custom `webpack` in `next.config.js` when Turbopack is default.
+- **Edge runtime on middleware/proxy deprecated**: Flags `export const runtime = 'edge'` in middleware/proxy.
+- **`getInitialProps` deprecated**: Flags legacy `getInitialProps` in Pages router.
 
 ### Next.js 14 &rarr; 15 (15 Rules)
 - **Async `cookies()` requirement**: Flags synchronous `cookies().get(...)` calls (must be `await cookies()`).
@@ -120,7 +132,7 @@ cd antigravity-extension
 # Install dependencies
 npm install
 
-# Run automated test suites (29 unit & integration tests)
+# Run automated test suites (36 unit & integration tests)
 npm test
 
 # Build production bundle

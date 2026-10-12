@@ -2,6 +2,7 @@ import * as semver from 'semver';
 import { MigrationRule, UpgradeTarget } from '../types/rules';
 
 import next14To15Rules from './definitions/nextjs/14-to-15.json';
+import next15To16Rules from './definitions/nextjs/15-to-16.json';
 import react18To19Rules from './definitions/react/18-to-19.json';
 
 export class RuleRegistry {
@@ -25,6 +26,7 @@ export class RuleRegistry {
   private loadBuiltinRules(): void {
     const builtin: MigrationRule[] = [
       ...(next14To15Rules as unknown as MigrationRule[]),
+      ...(next15To16Rules as unknown as MigrationRule[]),
       ...(react18To19Rules as unknown as MigrationRule[])
     ];
     this.rules = builtin;
@@ -91,7 +93,17 @@ export class RuleRegistry {
       const satisfiesFrom = semver.satisfies(cleanOld.version, rule.fromVersion, { includePrerelease: true });
       const satisfiesTo = semver.satisfies(cleanNew.version, rule.toVersion, { includePrerelease: true });
 
-      return satisfiesFrom && satisfiesTo;
+      if (satisfiesFrom && satisfiesTo) {
+        return true;
+      }
+
+      // Support multi-major upgrades (e.g. 14 -> 16 spanning 14->15 and 15->16)
+      const minTo = semver.minVersion(rule.toVersion);
+      if (minTo && semver.gte(cleanNew.version, minTo.version) && semver.lt(cleanOld.version, minTo.version)) {
+        return true;
+      }
+
+      return false;
     });
   }
 

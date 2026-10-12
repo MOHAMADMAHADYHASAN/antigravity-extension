@@ -44,7 +44,7 @@ export class ScanEngine {
       }
 
       // Stage 1: Fast Regex / String Filter
-      const filterResult = FastFilter.filter(content, rules);
+      const filterResult = FastFilter.filter(content, rules, file);
       if (!filterResult.shouldParse) {
         continue;
       }

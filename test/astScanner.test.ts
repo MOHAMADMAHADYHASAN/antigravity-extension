@@ -185,4 +185,79 @@ describe('AstScanner', () => {
       assert.equal(propTypesIssue.line, 3);
     });
   });
+
+  describe('Next.js 16 AST detection', () => {
+    const next16Rules = registry.getRulesForUpgrade('next', '15.0.0', '16.0.0');
+
+    it('should detect synchronous params property access in Next.js 16', () => {
+      const code = [
+        'export default function Page({ params }: { params: { slug: string } }) {',
+        '  const slug = params.slug;', // Line 2
+        '  return <div>{slug}</div>;',
+        '}'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('app/blog/[slug]/page.tsx', code, next16Rules);
+      const paramsIssue = issues.find((i) => i.ruleId === 'next-16-async-params');
+
+      assert.ok(paramsIssue, 'Should flag synchronous params.slug access');
+      assert.equal(paramsIssue.line, 2);
+    });
+
+    it('should detect middleware function convention in Next.js 16', () => {
+      const code = [
+        "import { NextResponse } from 'next/server';",
+        'export function middleware(req: any) {', // Line 2
+        '  return NextResponse.next();',
+        '}'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('middleware.ts', code, next16Rules);
+      const middlewareIssue = issues.find((i) => i.ruleId === 'next-16-middleware-to-proxy');
+
+      assert.ok(middlewareIssue, 'Should flag middleware function in Next 16');
+      assert.equal(middlewareIssue.line, 2);
+    });
+
+    it('should detect next/amp imports in Next.js 16', () => {
+      const code = [
+        "import { useAmp } from 'next/amp';", // Line 1
+        'export default function Page() { return null; }'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('pages/amp.tsx', code, next16Rules);
+      const ampIssue = issues.find((i) => i.ruleId === 'next-16-amp-removed');
+
+      assert.ok(ampIssue, 'Should flag next/amp import in Next 16');
+      assert.equal(ampIssue.line, 1);
+    });
+
+    it('should detect unstable_cache calls in Next.js 16', () => {
+      const code = [
+        "import { unstable_cache } from 'next/cache';",
+        'const getData = unstable_cache(async () => [], ["key"]);' // Line 2
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('lib/data.ts', code, next16Rules);
+      const cacheIssue = issues.find((i) => i.ruleId === 'next-16-unstable-cache-deprecated');
+
+      assert.ok(cacheIssue, 'Should flag unstable_cache call in Next 16');
+      assert.equal(cacheIssue.line, 2);
+    });
+
+    it('should detect serverRuntimeConfig in next.config.js in Next.js 16', () => {
+      const code = [
+        'module.exports = {',
+        '  serverRuntimeConfig: { secret: "123" }', // Line 2
+        '};'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('next.config.js', code, next16Rules);
+      const configIssue = issues.find((i) => i.ruleId === 'next-16-runtime-config-removed');
+
+      assert.ok(configIssue, 'Should flag serverRuntimeConfig in next.config.js');
+      assert.equal(configIssue.line, 2);
+    });
+  });
 });
+

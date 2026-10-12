@@ -184,7 +184,7 @@ export function activate(context: vscode.ExtensionContext) {
     const fromVersion = await vscode.window.showInputBox({
       title: `Antigravity: ${selectedFramework} Current Version`,
       prompt: `Enter your CURRENT ${selectedFramework} version`,
-      placeHolder: 'e.g., 14.2.0 or 14',
+      placeHolder: 'e.g., 14.2.0, 14, or 15',
       validateInput: (value) => (value.trim() ? null : 'Current version cannot be empty')
     });
     if (!fromVersion) {
@@ -195,7 +195,7 @@ export function activate(context: vscode.ExtensionContext) {
     const toVersion = await vscode.window.showInputBox({
       title: `Antigravity: ${selectedFramework} Target Version`,
       prompt: `Enter your TARGET ${selectedFramework} version`,
-      placeHolder: 'e.g., 15.0.0 or 15',
+      placeHolder: 'e.g., 15.0.0, 15, or 16',
       validateInput: (value) => (value.trim() ? null : 'Target version cannot be empty')
     });
     if (!toVersion) {

@@ -44,11 +44,15 @@ describe('End-to-End Migration Flow', () => {
     });
 
     assert.ok(scanResult.totalFilesScanned >= 6, 'Should scan fixture files');
-    assert.equal(scanResult.issues.length, 6, 'Should catch all 6 fixture issues');
+    assert.equal(scanResult.issues.length, 7, 'Should catch all 7 fixture issues');
     assert.equal(scanResult.filesWithIssues, 6, 'Should find issues in 6 separate files');
 
     // 4. Verify each individual issue with line accuracy
     const issueMap = new Map(scanResult.issues.map((i) => [i.ruleId, i]));
+
+    const routeGetIssue = issueMap.get('next-15-route-handlers-uncached-by-default');
+    assert.ok(routeGetIssue, 'Should detect uncached GET Route Handler');
+    assert.equal(routeGetIssue.line, 3);
 
     const cookieIssue = issueMap.get('next-15-async-cookies');
     assert.ok(cookieIssue);
@@ -89,7 +93,7 @@ describe('End-to-End Migration Flow', () => {
     assert.ok(markdownReport.includes('Antigravity Migration Report'));
     assert.ok(markdownReport.includes('**next** (^14.2.5 → ^15.0.0)'));
     assert.ok(markdownReport.includes('**react** (^18.2.0 → ^19.0.0)'));
-    assert.ok(markdownReport.includes('Total Issues Flagged** | **6**'));
+    assert.ok(markdownReport.includes('Total Issues Flagged** | **7**'));
 
     // Verify all 6 relative clickable links are included
     assert.ok(markdownReport.includes('app/api/auth/route.ts:4'));
