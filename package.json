@@ -94,7 +94,7 @@
     "watch": "node esbuild.js --watch",
     "build": "tsc -p ./ --noEmit && node esbuild.js --production",
     "test": "tsx --test test/**/*.test.ts",
-    "release": "npm version patch && npx @vscode/vsce package --baseContentUrl https://github.com/MOHAMADMAHADYHASAN/antigravity-extension --baseImagesUrl https://github.com/MOHAMADMAHADYHASAN/antigravity-extension"
+    "release": "rm -f *.vsix && npm version patch && npx @vscode/vsce package --baseContentUrl https://github.com/MOHAMADMAHADYHASAN/antigravity-extension --baseImagesUrl https://github.com/MOHAMADMAHADYHASAN/antigravity-extension"
   },
   "dependencies": {
     "semver": "^7.6.3"
