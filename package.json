@@ -2,7 +2,7 @@
   "name": "antigravity",
   "displayName": "Antigravity - Framework Migration Assistant",
   "description": "Scans your codebase on framework upgrades (Next.js, React, etc.) and generates actionable migration reports.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publisher": "antigravity",
   "repository": {
     "type": "git",
