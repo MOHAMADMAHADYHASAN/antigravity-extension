@@ -5,6 +5,18 @@ All notable changes to the **UpgradeLens** (formerly *Antigravity*) extension wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.14] - 2026-10-13
+
+### Added
+- **Engine-Level AST Expansion**:
+  - `JsxElementPattern` & `JSXOpeningElement`: Detects `<Context.Provider>` and flags `<*.Provider>` tags for React 19/20.
+  - `ThisExpression` Member Resolution: Resolves `this.refs` directly on class components.
+  - Universal Callee Matching: Supports namespace and bare callee resolution (e.g. `React.forwardRef` and `forwardRef`, `React.createFactory` and `createFactory`).
+  - Zero-Argument Validation: Detects `useRef()` called with 0 arguments while preserving `useRef(null)`.
+- **Exhaustive React 19 & 20 Rulesets (26 Rules)**:
+  - React 18 &rarr; 19: Expanded to 18 rules covering all breaking changes and deprecations from the official React 19 Upgrade Guide.
+  - React 19 &rarr; 20: Expanded to 8 breaking error rules for complete forward migration support.
+
 ## [0.1.11] - 2026-10-13
 
 ### Added
