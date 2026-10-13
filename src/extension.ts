@@ -75,6 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Determine rules to execute
     let rulesToRun: MigrationRule[] = [];
     const upgradeTargets: UpgradeTarget[] = [];
+    let detectedDeps: Record<string, string> = {};
 
     // Attempt to inspect workspace package.json
     try {
@@ -87,6 +88,7 @@ export function activate(context: vscode.ExtensionContext) {
       await registry.loadRemoteRulesForProject(text, localRulesDir);
 
       const currentDeps = VersionTracker.extractDependencies(text);
+      detectedDeps = currentDeps;
       const savedDeps = VersionTracker.getSavedSnapshot(context, packageJsonUri.fsPath);
 
       if (savedDeps) {
@@ -109,9 +111,21 @@ export function activate(context: vscode.ExtensionContext) {
       // If reading package.json fails or no diff, run all supported rules
     }
 
-    // If no specific upgrade delta found, offer full scan of all rules
+    // If no specific upgrade delta found, filter rules by frameworks detected in package.json
     if (rulesToRun.length === 0) {
-      rulesToRun = registry.getAllRules();
+      const detectedFrameworks = new Set<string>();
+      for (const pkg of Object.keys(detectedDeps)) {
+        const norm = pkg.toLowerCase();
+        if (norm === 'react') detectedFrameworks.add('react');
+        if (norm === 'next' || norm === 'nextjs') detectedFrameworks.add('next');
+        if (norm === 'prisma' || norm === '@prisma/client') detectedFrameworks.add('prisma');
+      }
+
+      if (detectedFrameworks.size > 0) {
+        rulesToRun = registry.getAllRules().filter((r) => detectedFrameworks.has(r.framework));
+      } else {
+        rulesToRun = registry.getAllRules();
+      }
     }
 
     // Run scan with progress notification and cancellation support

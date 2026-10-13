@@ -18,7 +18,12 @@ export class PrismaSchemaScanner {
     const lines = content.split('\n');
 
     for (const rule of rules) {
-      // 1. Verify file extension matches rule expectations if specified
+      // 1. Only process Prisma framework rules
+      if (rule.framework !== 'prisma') {
+        continue;
+      }
+
+      // 2. Verify file extension matches rule expectations if specified
       if (rule.detection?.fileExtensions && !rule.detection.fileExtensions.includes('.prisma')) {
         continue;
       }
