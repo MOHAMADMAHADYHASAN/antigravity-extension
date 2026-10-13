@@ -4,18 +4,18 @@
   "toVersion": ">=20.0.0",
   "rules": [
     {
-      "id": "react-20-forward-ref-deprecated",
-      "severity": "warning",
-      "category": "deprecation",
-      "title": "forwardRef is deprecated; ref is a standard prop on function components",
+      "id": "react-20-forward-ref-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "forwardRef has been completely removed in React 20",
       "docsUrl": "https://react.dev/reference/react/forwardRef",
-      "description": "In React 19+, ref is available as a standard prop passed directly to function components. forwardRef wrapper is deprecated and will be removed in React 20.",
+      "description": "In React 20, forwardRef has been removed. Pass ref directly as a regular prop to function components.",
       "fastFilter": ["forwardRef"],
       "astPattern": {
         "type": "callExpression",
         "callee": "forwardRef"
       },
-      "message": "`forwardRef` is deprecated. Pass `ref` directly as a prop to function components.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (React 18/19 wrapper)\nconst MyButton = forwardRef((props, ref) => {\n  return <button ref={ref} {...props} />;\n});\n\n// ✅ AFTER (React 19/20 ref prop)\nfunction MyButton({ ref, ...props }: { ref?: React.Ref<HTMLButtonElement> }) {\n  return <button ref={ref} {...props} />;\n}\n```\n</details>",
+      "message": "`forwardRef` is removed in React 20. Pass `ref` directly as a prop to function components.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (React 18/19 wrapper)\nconst MyButton = forwardRef((props, ref) => {\n  return <button ref={ref} {...props} />;\n});\n\n// ✅ AFTER (React 20 ref prop)\nfunction MyButton({ ref, ...props }: { ref?: React.Ref<HTMLButtonElement> }) {\n  return <button ref={ref} {...props} />;\n}\n```\n</details>",
       "detection": {
         "fileExtensions": [".jsx", ".tsx"],
         "fastFilter": ["forwardRef"],
@@ -31,12 +31,39 @@
       }
     },
     {
+      "id": "react-20-context-provider-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "<Context.Provider> has been completely removed in React 20",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#context-as-a-provider",
+      "description": "<Context.Provider> has been completely removed in React 20. Render <Context value={...}> directly.",
+      "fastFilter": [".Provider", "Provider"],
+      "astPattern": {
+        "type": "jsxElement",
+        "property": "Provider"
+      },
+      "message": "`<Context.Provider>` has been removed in React 20. Render `<Context>` directly as a provider.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\n<ThemeContext.Provider value=\"dark\">\n  <App />\n</ThemeContext.Provider>\n\n// ✅ AFTER (React 20)\n<ThemeContext value=\"dark\">\n  <App />\n</ThemeContext>\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".jsx", ".tsx"],
+        "fastFilter": [".Provider", "Provider"],
+        "astPattern": {
+          "type": "jsxElement",
+          "property": "Provider"
+        }
+      },
+      "remediation": {
+        "summary": "Render the Context object directly instead of using .Provider.",
+        "exampleBefore": "<ThemeContext.Provider value={val}>{children}</ThemeContext.Provider>",
+        "exampleAfter": "<ThemeContext value={val}>{children}</ThemeContext>"
+      }
+    },
+    {
       "id": "react-20-default-props-removed",
       "severity": "error",
       "category": "breaking",
-      "title": "defaultProps on function components has been removed in React 20",
+      "title": "defaultProps on function components has been completely removed in React 20",
       "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-react-apis",
-      "description": "Defining defaultProps on function components has been removed. Use JavaScript default parameter values in the component arguments list.",
+      "description": "Defining defaultProps on function components has been completely removed. Use JavaScript default parameter values in component argument lists.",
       "fastFilter": ["defaultProps"],
       "astPattern": {
         "type": "memberExpression",
@@ -61,9 +88,9 @@
       "id": "react-20-legacy-context-removed",
       "severity": "error",
       "category": "breaking",
-      "title": "Legacy Context API (contextTypes, childContextTypes) has been removed in React 20",
+      "title": "Legacy Context API (contextTypes, childContextTypes) has been completely removed in React 20",
       "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-react-apis",
-      "description": "The legacy Context API using contextTypes and childContextTypes has been completely removed in React 20. Use React.createContext() and the use(Context) hook.",
+      "description": "The legacy Context API using contextTypes and childContextTypes has been completely removed in React 20. Use React.createContext() and the use() hook.",
       "fastFilter": ["contextTypes", "childContextTypes"],
       "astPattern": {
         "type": "identifier",
@@ -98,7 +125,7 @@
         "type": "import",
         "source": "react-dom/test-utils"
       },
-      "message": "`react-dom/test-utils` has been removed in React 20. Use `@testing-library/react`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport { act } from 'react-dom/test-utils';\n\n// ✅ AFTER\nimport { act } from 'react';\n// or\nimport { render, screen } from '@testing-library/react';\n```\n</details>",
+      "message": "`react-dom/test-utils` has been removed in React 20. Use `@testing-library/react` and `act` from `'react'`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport { act } from 'react-dom/test-utils';\n\n// ✅ AFTER\nimport { act } from 'react';\n```\n</details>",
       "detection": {
         "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
         "fastFilter": ["react-dom/test-utils"],
@@ -108,9 +135,92 @@
         }
       },
       "remediation": {
-        "summary": "Remove react-dom/test-utils imports and migrate to @testing-library/react.",
+        "summary": "Import act directly from 'react' and migrate unit tests to React Testing Library.",
         "exampleBefore": "import { act } from 'react-dom/test-utils';",
         "exampleAfter": "import { act } from 'react';"
+      }
+    },
+    {
+      "id": "react-20-react-test-renderer-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "react-test-renderer package has been completely removed in React 20",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#deprecated-react-test-renderer",
+      "description": "react-test-renderer has been completely removed in React 20. Migrate your tests to @testing-library/react.",
+      "fastFilter": ["react-test-renderer"],
+      "astPattern": {
+        "type": "import",
+        "source": "react-test-renderer"
+      },
+      "message": "`react-test-renderer` has been removed in React 20. Migrate tests to `@testing-library/react`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport TestRenderer from 'react-test-renderer';\n\n// ✅ AFTER\nimport { render } from '@testing-library/react';\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["react-test-renderer"],
+        "astPattern": {
+          "type": "import",
+          "source": "react-test-renderer"
+        }
+      },
+      "remediation": {
+        "summary": "Migrate tests using react-test-renderer to @testing-library/react.",
+        "exampleBefore": "import TestRenderer from 'react-test-renderer';",
+        "exampleAfter": "import { render } from '@testing-library/react';"
+      }
+    },
+    {
+      "id": "react-20-use-form-state-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "useFormState has been completely removed from 'react-dom' in React 20",
+      "docsUrl": "https://react.dev/reference/react/useActionState",
+      "description": "useFormState from 'react-dom' has been completely removed in React 20. Use useActionState from 'react'.",
+      "fastFilter": ["useFormState"],
+      "astPattern": {
+        "type": "import",
+        "source": "react-dom",
+        "specifiers": ["useFormState"]
+      },
+      "message": "`useFormState` has been removed from `'react-dom'` in React 20. Use `useActionState` from `'react'`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport { useFormState } from 'react-dom';\n\n// ✅ AFTER\nimport { useActionState } from 'react';\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["useFormState"],
+        "astPattern": {
+          "type": "import",
+          "source": "react-dom",
+          "specifiers": ["useFormState"]
+        }
+      },
+      "remediation": {
+        "summary": "Replace useFormState from 'react-dom' with useActionState from 'react'.",
+        "exampleBefore": "import { useFormState } from 'react-dom';",
+        "exampleAfter": "import { useActionState } from 'react';"
+      }
+    },
+    {
+      "id": "react-20-find-dom-node-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "ReactDOM.findDOMNode has been completely removed in React 20",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-reactdom-apis",
+      "description": "ReactDOM.findDOMNode is completely removed in React 20. Use standard DOM refs.",
+      "fastFilter": ["findDOMNode"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "ReactDOM.findDOMNode"
+      },
+      "message": "`ReactDOM.findDOMNode` has been removed in React 20. Use DOM `ref` instead.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nconst node = ReactDOM.findDOMNode(this);\n\n// ✅ AFTER\nconst nodeRef = useRef<HTMLDivElement>(null);\nreturn <div ref={nodeRef} />;\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["findDOMNode"],
+        "astPattern": {
+          "type": "callExpression",
+          "callee": "ReactDOM.findDOMNode"
+        }
+      },
+      "remediation": {
+        "summary": "Pass a DOM ref directly to the native element instead of calling ReactDOM.findDOMNode.",
+        "exampleBefore": "const el = ReactDOM.findDOMNode(componentRef.current);",
+        "exampleAfter": "const elRef = useRef<HTMLDivElement>(null);\n<div ref={elRef} />"
       }
     }
   ]

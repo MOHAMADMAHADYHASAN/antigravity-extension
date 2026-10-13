@@ -50,21 +50,35 @@ Instead of guessing what broke after running `npm install`, **UpgradeLens** dete
 - **Turbopack default bundler**: Flags redundant `--turbo` and `--turbopack` script flags.
 - **Legacy `headers()` removal**: Flags synchronous `headers()` invocations.
 
-### React 18 &rarr; 19 (8 Rules)
+### React 18 &rarr; 19 (18 Rules)
 - **Removed `ReactDOM.render`**: Replaced by `createRoot` from `react-dom/client`.
 - **Removed `ReactDOM.hydrate`**: Replaced by `hydrateRoot` from `react-dom/client`.
 - **Removed `unmountComponentAtNode`**: Replaced by `root.unmount()`.
-- **Removed string refs**: Replaced by `useRef()` or callback refs.
-- **Removed Legacy Context**: `childContextTypes` removed in favor of `React.createContext()`.
+- **Removed `findDOMNode`**: Direct DOM refs required on native elements.
 - **Removed `React.PropTypes`**: Replaced by TypeScript interfaces or `prop-types` package.
-- **Removed Factory Components**: Module pattern factory components removed.
-- **`useFormState` renamed**: Migrated to `useActionState` from `react`.
+- **Removed string refs**: Replaced by `useRef()` or callback refs.
+- **Removed `this.refs`**: Direct `React.createRef()` required on class components.
+- **Removed `defaultProps` on Function Components**: Replaced with ES6 default argument parameters.
+- **Removed Legacy Lifecycles**: `componentWillMount`, `componentWillReceiveProps`, `componentWillUpdate` removed.
+- **Removed Legacy Context**: `contextTypes` / `childContextTypes` removed in favor of `React.createContext()` and `use()`.
+- **Removed `React.createFactory`**: Replaced by standard JSX elements.
+- **Removed `react-test-renderer/shallow`**: Replaced by standalone `react-shallow-renderer` package.
+- **Deprecated `react-dom/test-utils`**: Import `act` directly from `'react'`.
+- **Deprecated `useFormState`**: Replaced by `useActionState` from `'react'`.
+- **Deprecated `forwardRef`**: Function components receive `ref` directly as a regular prop.
+- **Deprecated `<Context.Provider>`**: Render `<Context value={...}>` directly as a provider.
+- **`useRef()` argument requirement**: Calling `useRef()` with 0 arguments deprecated in TS typings; use `useRef(null)`.
+- **Deprecated `react-test-renderer`**: Migrated to React Testing Library (`@testing-library/react`).
 
-### React 19 &rarr; 20 (4 Rules)
-- **Removed `findDOMNode`**: Direct DOM refs required.
-- **Removed `defaultProps` on Function Components**: Replaced with ES6 default arguments.
-- **React Compiler optimization**: Audits manual `useMemo`/`useCallback` dependencies.
-- **Removed `e.persist()`**: Synthetic event pooling removed.
+### React 19 &rarr; 20 (8 Rules)
+- **Removed `forwardRef`**: Direct `ref` prop required on function components.
+- **Removed `<Context.Provider>`**: Direct `<Context value={...}>` required.
+- **Removed `defaultProps`**: Removed across all component types.
+- **Removed Legacy Context**: `contextTypes` completely removed.
+- **Removed `react-dom/test-utils`**: Completely removed in favor of React Testing Library.
+- **Removed `react-test-renderer`**: Completely removed in favor of React Testing Library.
+- **Removed `useFormState`**: Completely removed from `react-dom`.
+- **Removed `ReactDOM.findDOMNode`**: Completely removed from `react-dom`.
 
 ### Prisma 5 &rarr; 6 (5 Rules)
 - **Bytes fields return Uint8Array**: Node.js `Buffer` replaced by native `Uint8Array`.

@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Safe payload validation isolating invalid JSON or malformed rules.
 - **Framework Breaking Change Rules**:
   - **Next.js 16 & 17**: 15 migration rules covering async `params`/`searchParams`, `middleware.ts` to `proxy.ts`, removal of `next/amp`, `unstable_cache` deprecation, Pages Router deprecation, and stable Partial Prerendering.
-  - **React 19 & 20**: 12 migration rules covering removal of `ReactDOM.render`, `unmountComponentAtNode`, string refs, legacy context, `React.PropTypes`, and `findDOMNode`.
+  - **React 19 & 20 (26 Rules)**: Complete, limit-free coverage of all React 19 breaking changes and deprecations (18 rules including `ReactDOM.render`, `ReactDOM.hydrate`, `unmountComponentAtNode`, `findDOMNode`, `this.refs`, `defaultProps`, legacy lifecycles, legacy context, `createFactory`, `react-test-renderer/shallow`, `test-utils`, `useFormState`, `forwardRef`, `<Context.Provider>`, `useRef()`, `react-test-renderer`) and 8 React 20 removal rules.
   - **Prisma 6**: 8 migration rules covering removal of `rejectOnNotFound`, `prisma.$use()` deprecation, and removal of `NotFoundError`.
 - **Prisma Schema DSL Scanner**:
   - Dedicated DSL parser in `src/scanner/prismaSchemaScanner.ts` for `.prisma` files.

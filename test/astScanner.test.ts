@@ -185,6 +185,136 @@ describe('AstScanner', () => {
       assert.ok(propTypesIssue, 'Should flag React.PropTypes');
       assert.equal(propTypesIssue.line, 3);
     });
+
+    it('should detect ReactDOM.hydrate with exact line number', () => {
+      const code = [
+        "import ReactDOM from 'react-dom';",
+        'ReactDOM.hydrate(<App />, document.getElementById("root"));'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('src/entry.tsx', code, reactRules);
+      const hydrateIssue = issues.find((i) => i.ruleId === 'react-19-removed-reactdom-hydrate');
+      assert.ok(hydrateIssue, 'Should flag ReactDOM.hydrate');
+      assert.equal(hydrateIssue.line, 2);
+    });
+
+    it('should detect ReactDOM.unmountComponentAtNode with exact line number', () => {
+      const code = [
+        "import ReactDOM from 'react-dom';",
+        'ReactDOM.unmountComponentAtNode(container);'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('src/cleanup.ts', code, reactRules);
+      const unmountIssue = issues.find((i) => i.ruleId === 'react-19-removed-unmount-component');
+      assert.ok(unmountIssue, 'Should flag unmountComponentAtNode');
+      assert.equal(unmountIssue.line, 2);
+    });
+
+    it('should detect this.refs property access on class components', () => {
+      const code = [
+        'class Form extends React.Component {',
+        '  focus() {',
+        '    this.refs.input.focus();',
+        '  }',
+        '}'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('src/Form.tsx', code, reactRules);
+      const thisRefsIssue = issues.find((i) => i.ruleId === 'react-19-removed-this-refs');
+      assert.ok(thisRefsIssue, 'Should flag this.refs');
+      assert.equal(thisRefsIssue.line, 3);
+    });
+
+    it('should detect defaultProps on components', () => {
+      const code = [
+        'function Badge({ color }: { color?: string }) {',
+        '  return <span>{color}</span>;',
+        '}',
+        "Badge.defaultProps = { color: 'blue' };"
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('src/Badge.tsx', code, reactRules);
+      const defaultPropsIssue = issues.find((i) => i.ruleId === 'react-19-removed-default-props-function');
+      assert.ok(defaultPropsIssue, 'Should flag defaultProps');
+      assert.equal(defaultPropsIssue.line, 4);
+    });
+
+    it('should detect React.createFactory invocations', () => {
+      const code = [
+        "import React from 'react';",
+        "const divFactory = React.createFactory('div');"
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('src/factory.ts', code, reactRules);
+      const factoryIssue = issues.find((i) => i.ruleId === 'react-19-removed-create-factory');
+      assert.ok(factoryIssue, 'Should flag createFactory');
+      assert.equal(factoryIssue.line, 2);
+    });
+
+    it('should detect react-test-renderer/shallow imports', () => {
+      const code = [
+        "import ShallowRenderer from 'react-test-renderer/shallow';",
+        'const renderer = new ShallowRenderer();'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('test/comp.test.ts', code, reactRules);
+      const shallowIssue = issues.find((i) => i.ruleId === 'react-19-removed-react-test-renderer-shallow');
+      assert.ok(shallowIssue, 'Should flag react-test-renderer/shallow');
+      assert.equal(shallowIssue.line, 1);
+    });
+
+    it('should detect forwardRef wrappers', () => {
+      const code = [
+        "import { forwardRef } from 'react';",
+        'const Button = forwardRef((props, ref) => <button ref={ref} />);'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('src/Button.tsx', code, reactRules);
+      const forwardRefIssue = issues.find((i) => i.ruleId === 'react-19-deprecated-forward-ref');
+      assert.ok(forwardRefIssue, 'Should flag forwardRef');
+      assert.equal(forwardRefIssue.line, 2);
+    });
+
+    it('should detect <Context.Provider> JSX elements', () => {
+      const code = [
+        'export function ThemeWrapper({ children }) {',
+        '  return <ThemeContext.Provider value="dark">{children}</ThemeContext.Provider>;',
+        '}'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('src/Theme.tsx', code, reactRules);
+      const providerIssue = issues.find((i) => i.ruleId === 'react-19-deprecated-context-provider');
+      assert.ok(providerIssue, 'Should flag <ThemeContext.Provider>');
+      assert.equal(providerIssue.line, 2);
+    });
+
+    it('should detect useRef() called with 0 arguments and not flag useRef(null)', () => {
+      const badCode = [
+        "import { useRef } from 'react';",
+        'function Input() {',
+        '  const ref = useRef();',
+        '  return null;',
+        '}'
+      ].join('\n');
+
+      const goodCode = [
+        "import { useRef } from 'react';",
+        'function Input() {',
+        '  const ref = useRef(null);',
+        '  return null;',
+        '}'
+      ].join('\n');
+
+      const badIssues = AstScanner.scanFile('src/Bad.tsx', badCode, reactRules);
+      const goodIssues = AstScanner.scanFile('src/Good.tsx', goodCode, reactRules);
+
+      const badRefIssue = badIssues.find((i) => i.ruleId === 'react-19-useref-no-arguments');
+      const goodRefIssue = goodIssues.find((i) => i.ruleId === 'react-19-useref-no-arguments');
+
+      assert.ok(badRefIssue, 'Should flag useRef() with no arguments');
+      assert.equal(badRefIssue.line, 3);
+      assert.equal(goodRefIssue, undefined, 'Should NOT flag useRef(null)');
+    });
   });
 
   describe('Next.js 16 AST detection', () => {
