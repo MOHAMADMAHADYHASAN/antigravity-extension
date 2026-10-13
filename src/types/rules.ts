@@ -6,7 +6,8 @@ export type AstPatternType =
   | 'import'
   | 'jsxAttribute'
   | 'identifier'
-  | 'asyncRequestApi';
+  | 'asyncRequestApi'
+  | 'jsxElement';
 
 export interface CallExpressionPattern {
   type: 'callExpression';
@@ -17,7 +18,7 @@ export interface CallExpressionPattern {
 
 export interface MemberExpressionPattern {
   type: 'memberExpression';
-  object: string; // e.g. "React", "ReactDOM", "params", "request"
+  object?: string; // e.g. "React", "ReactDOM", "params", "request", "this"
   property?: string; // e.g. "PropTypes", "findDOMNode", or optional for any property
 }
 
@@ -46,13 +47,20 @@ export interface AsyncRequestApiPattern {
   apiName: 'cookies' | 'headers' | 'draftMode' | 'params' | 'searchParams';
 }
 
+export interface JsxElementPattern {
+  type: 'jsxElement';
+  name?: string; // e.g. "*.Provider", "Context.Provider"
+  property?: string; // e.g. "Provider"
+}
+
 export type AstPattern =
   | CallExpressionPattern
   | MemberExpressionPattern
   | ImportPattern
   | JsxAttributePattern
   | IdentifierPattern
-  | AsyncRequestApiPattern;
+  | AsyncRequestApiPattern
+  | JsxElementPattern;
 
 export interface DetectionCriteria {
   fileExtensions: string[]; // e.g. [".js", ".jsx", ".ts", ".tsx"]

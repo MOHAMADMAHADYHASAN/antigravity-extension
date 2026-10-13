@@ -9,26 +9,67 @@ import { ScanEngine } from './scanner/scanEngine';
 import { MigrationRule, UpgradeTarget } from './types/rules';
 
 /**
+ * Helper to retrieve effective configuration prioritizing 'upgradelens' with fallback to 'antigravity'
+ */
+function getEffectiveConfig() {
+  const config = vscode.workspace.getConfiguration('upgradelens');
+  const legacyConfig = vscode.workspace.getConfiguration('antigravity');
+  return {
+    get: <T>(key: string, defaultValue: T): T => {
+      const primary = config.get<T>(key);
+      if (primary !== undefined && primary !== null) {
+        const inspected = config.inspect<T>(key);
+        if (inspected?.workspaceValue !== undefined || inspected?.globalValue !== undefined) {
+          return primary;
+        }
+      }
+      const legacy = legacyConfig.get<T>(key);
+      if (legacy !== undefined && legacy !== null) {
+        return legacy;
+      }
+      return primary !== undefined ? primary : defaultValue;
+    }
+  };
+}
+
+/**
+ * Helper to register a command under both the new 'upgradelens' namespace and the legacy 'antigravity' alias
+ */
+function registerWithLegacyAlias(
+  primaryCommand: string,
+  legacyCommand: string,
+  handler: (...args: any[]) => any
+): vscode.Disposable[] {
+  return [
+    vscode.commands.registerCommand(primaryCommand, handler),
+    vscode.commands.registerCommand(legacyCommand, handler)
+  ];
+}
+
+/**
  * Extension activation entry point
  */
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Antigravity - Framework Migration Assistant is now active.');
+  console.log('UpgradeLens - Framework Migration Assistant is now active.');
 
   const registry = RuleRegistry.getInstance();
+  // Asynchronously pre-fetch remote rules in the background
+  registry.fetchRemoteRules().catch(() => {});
+
   const watcher = new DependencyWatcher(context);
   watcher.activate();
   context.subscriptions.push(watcher);
 
   // 1. Command: Scan Project
-  const scanCommand = vscode.commands.registerCommand('antigravity.scanProject', async () => {
+  const scanHandler = async () => {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
-      vscode.window.showWarningMessage('Antigravity: Please open a workspace folder to run a scan.');
+      vscode.window.showWarningMessage('UpgradeLens: Please open a workspace folder to run a scan.');
       return;
     }
 
     const workspaceRoot = workspaceFolders[0].uri.fsPath;
-    const config = vscode.workspace.getConfiguration('antigravity');
+    const config = getEffectiveConfig();
     const excludeGlobs = config.get<string[]>('excludeGlobs', []);
 
     // Determine rules to execute
@@ -40,6 +81,11 @@ export function activate(context: vscode.ExtensionContext) {
       const packageJsonUri = vscode.Uri.file(path.join(workspaceRoot, 'package.json'));
       const raw = await vscode.workspace.fs.readFile(packageJsonUri);
       const text = new TextDecoder('utf-8').decode(raw);
+
+      // Dynamically load remote rules for project based on manifest and detected dependencies
+      const localRulesDir = path.join(workspaceRoot, 'remote-rules');
+      await registry.loadRemoteRulesForProject(text, localRulesDir);
+
       const currentDeps = VersionTracker.extractDependencies(text);
       const savedDeps = VersionTracker.getSavedSnapshot(context, packageJsonUri.fsPath);
 
@@ -72,7 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: 'Antigravity: Running framework migration scan...',
+        title: 'UpgradeLens: Running framework migration scan...',
         cancellable: true
       },
       async (progress, token) => {
@@ -96,7 +142,7 @@ export function activate(context: vscode.ExtensionContext) {
         });
 
         if (token.isCancellationRequested) {
-          vscode.window.showInformationMessage('Antigravity: Migration scan was cancelled.');
+          vscode.window.showInformationMessage('UpgradeLens: Migration scan was cancelled.');
           return;
         }
 
@@ -110,13 +156,13 @@ export function activate(context: vscode.ExtensionContext) {
         await ReportViewer.showReport(report);
       }
     );
-  });
+  };
 
   // 2. Command: Inspect Dependencies
-  const inspectCommand = vscode.commands.registerCommand('antigravity.inspectDependencies', async () => {
+  const inspectHandler = async () => {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
-      vscode.window.showWarningMessage('Antigravity: No active workspace found.');
+      vscode.window.showWarningMessage('UpgradeLens: No active workspace found.');
       return;
     }
 
@@ -138,33 +184,33 @@ export function activate(context: vscode.ExtensionContext) {
 
       if (detected.length === 0) {
         vscode.window.showInformationMessage(
-          `Antigravity: No supported frameworks found in package.json (supported: ${supported.join(', ')})`
+          `UpgradeLens: No supported frameworks found in package.json (supported: ${supported.join(', ')})`
         );
       } else {
         vscode.window.showInformationMessage(
-          `Antigravity Tracked Frameworks: ${detected.join(' | ')}`,
+          `UpgradeLens Tracked Frameworks: ${detected.join(' | ')}`,
           'Run Migration Scan'
         ).then((action) => {
           if (action === 'Run Migration Scan') {
-            vscode.commands.executeCommand('antigravity.scanProject');
+            vscode.commands.executeCommand('upgradelens.scanProject');
           }
         });
       }
     } catch {
-      vscode.window.showErrorMessage('Antigravity: Could not read package.json in the current workspace.');
+      vscode.window.showErrorMessage('UpgradeLens: Could not read package.json in the current workspace.');
     }
-  });
+  };
 
   // 3. Command: Save Report
-  const saveReportCommand = vscode.commands.registerCommand('antigravity.saveReport', async () => {
+  const saveReportHandler = async () => {
     await ReportViewer.saveReportToFile();
-  });
+  };
 
   // 4. Command: Run Custom Version Scan (Interactive User-Selected Versions)
-  const customScanCommand = vscode.commands.registerCommand('antigravity.customScan', async () => {
+  const customScanHandler = async () => {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders || workspaceFolders.length === 0) {
-      vscode.window.showWarningMessage('Antigravity: Please open a workspace folder to run a scan.');
+      vscode.window.showWarningMessage('UpgradeLens: Please open a workspace folder to run a scan.');
       return;
     }
 
@@ -174,7 +220,7 @@ export function activate(context: vscode.ExtensionContext) {
     // 1. Select framework
     const selectedFramework = await vscode.window.showQuickPick(supportedFrameworks, {
       placeHolder: 'Select framework to analyze',
-      title: 'Antigravity: Select Framework'
+      title: 'UpgradeLens: Select Framework'
     });
     if (!selectedFramework) {
       return;
@@ -182,7 +228,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // 2. Prompt for current version
     const fromVersion = await vscode.window.showInputBox({
-      title: `Antigravity: ${selectedFramework} Current Version`,
+      title: `UpgradeLens: ${selectedFramework} Current Version`,
       prompt: `Enter your CURRENT ${selectedFramework} version`,
       placeHolder: 'e.g., 14.2.0, 14, or 15',
       validateInput: (value) => (value.trim() ? null : 'Current version cannot be empty')
@@ -193,7 +239,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // 3. Prompt for target version
     const toVersion = await vscode.window.showInputBox({
-      title: `Antigravity: ${selectedFramework} Target Version`,
+      title: `UpgradeLens: ${selectedFramework} Target Version`,
       prompt: `Enter your TARGET ${selectedFramework} version`,
       placeHolder: 'e.g., 15.0.0, 15, or 16',
       validateInput: (value) => (value.trim() ? null : 'Target version cannot be empty')
@@ -202,24 +248,41 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
+    // Attempt to load remote rules for workspace dependencies if available
+    try {
+      const packageJsonUri = vscode.Uri.file(path.join(workspaceRoot, 'package.json'));
+      const raw = await vscode.workspace.fs.readFile(packageJsonUri);
+      const text = new TextDecoder('utf-8').decode(raw);
+      await registry.loadRemoteRulesForProject(text, path.join(workspaceRoot, 'remote-rules'));
+    } catch {
+      // Continue with local rules if package.json unavailable or offline
+    }
+
+    // Ensure remote rules for the selected framework & target version are fetched if available
+    await registry.fetchRemoteRules({
+      technology: selectedFramework,
+      version: toVersion,
+      localFallbackDir: path.join(workspaceRoot, 'remote-rules')
+    }).catch(() => {});
+
     // 4. Filter applicable rules dynamically from RuleRegistry
     const rulesToRun = registry.getRulesForUpgrade(selectedFramework, fromVersion, toVersion);
 
     if (rulesToRun.length === 0) {
       vscode.window.showInformationMessage(
-        `Antigravity: No migration rules found for ${selectedFramework} (${fromVersion} → ${toVersion}).`
+        `UpgradeLens: No migration rules found for ${selectedFramework} (${fromVersion} → ${toVersion}).`
       );
       return;
     }
 
-    const config = vscode.workspace.getConfiguration('antigravity');
+    const config = getEffectiveConfig();
     const excludeGlobs = config.get<string[]>('excludeGlobs', []);
 
     // 5. Run Scan with progress indicator
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: `Antigravity: Scanning for ${selectedFramework} (${fromVersion} → ${toVersion}) breaking changes...`,
+        title: `UpgradeLens: Scanning for ${selectedFramework} (${fromVersion} → ${toVersion}) breaking changes...`,
         cancellable: true
       },
       async (progress, token) => {
@@ -243,7 +306,7 @@ export function activate(context: vscode.ExtensionContext) {
         });
 
         if (token.isCancellationRequested) {
-          vscode.window.showInformationMessage('Antigravity: Migration scan was cancelled.');
+          vscode.window.showInformationMessage('UpgradeLens: Migration scan was cancelled.');
           return;
         }
 
@@ -262,14 +325,24 @@ export function activate(context: vscode.ExtensionContext) {
         await ReportViewer.showReport(report);
       }
     );
-  });
+  };
 
-  context.subscriptions.push(scanCommand, customScanCommand, inspectCommand, saveReportCommand);
+  const scanCommands = registerWithLegacyAlias('upgradelens.scanProject', 'antigravity.scanProject', scanHandler);
+  const inspectCommands = registerWithLegacyAlias('upgradelens.inspectDependencies', 'antigravity.inspectDependencies', inspectHandler);
+  const saveReportCommands = registerWithLegacyAlias('upgradelens.saveReport', 'antigravity.saveReport', saveReportHandler);
+  const customScanCommands = registerWithLegacyAlias('upgradelens.customScan', 'antigravity.customScan', customScanHandler);
+
+  context.subscriptions.push(
+    ...scanCommands,
+    ...inspectCommands,
+    ...saveReportCommands,
+    ...customScanCommands
+  );
 }
 
 /**
  * Extension deactivation entry point
  */
 export function deactivate() {
-  console.log('Antigravity deactivated.');
+  console.log('UpgradeLens deactivated.');
 }

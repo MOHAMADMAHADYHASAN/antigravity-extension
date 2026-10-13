@@ -3,6 +3,7 @@ import { ScanIssue, ScanOptions, ScanResult } from '../types/scanner';
 import { AstScanner } from './astScanner';
 import { FastFilter } from './fastFilter';
 import { FileCollector } from './fileCollector';
+import { PrismaSchemaScanner } from './prismaSchemaScanner';
 
 export class ScanEngine {
   /**
@@ -49,8 +50,11 @@ export class ScanEngine {
         continue;
       }
 
-      // Stage 2: Precision AST Parsing & Traversal
-      const fileIssues = AstScanner.scanFile(file, content, filterResult.candidateRules);
+      // Stage 2: Precision AST Parsing & Traversal (or DSL Schema Scanning)
+      const fileIssues = file.endsWith('.prisma')
+        ? PrismaSchemaScanner.scanFile(file, content, filterResult.candidateRules)
+        : AstScanner.scanFile(file, content, filterResult.candidateRules);
+
       if (fileIssues.length > 0) {
         issues.push(...fileIssues);
         filesWithIssuesSet.add(file);

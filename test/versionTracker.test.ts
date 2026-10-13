@@ -100,4 +100,27 @@ describe('VersionTracker', () => {
     assert.equal(diffs.length, 1);
     assert.equal(diffs[0].name, 'next');
   });
+
+  it('should support reading legacy antigravity.snapshot storage key with fallback to upgradelens.snapshot', async () => {
+    const stateMap = new Map<string, any>();
+    const mockContext: any = {
+      workspaceState: {
+        get: (key: string) => stateMap.get(key),
+        update: async (key: string, val: any) => {
+          stateMap.set(key, val);
+        }
+      }
+    };
+
+    // 1. If only legacy antigravity snapshot exists
+    stateMap.set('antigravity.snapshot./app/package.json', { next: '14.0.0' });
+    const legacyFound = VersionTracker.getSavedSnapshot(mockContext, '/app/package.json');
+    assert.deepEqual(legacyFound, { next: '14.0.0' });
+
+    // 2. If new upgradelens snapshot is saved
+    await VersionTracker.saveSnapshot(mockContext, '/app/package.json', { next: '15.0.0' });
+    assert.ok(stateMap.has('upgradelens.snapshot./app/package.json'));
+    const newFound = VersionTracker.getSavedSnapshot(mockContext, '/app/package.json');
+    assert.deepEqual(newFound, { next: '15.0.0' });
+  });
 });

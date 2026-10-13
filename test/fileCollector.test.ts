@@ -19,11 +19,8 @@ describe('FileCollector', () => {
       );
     });
 
-    it('should exclude prisma and .prisma directories', () => {
-      assert.ok(
-        FileCollector.isExcluded('prisma/client.js', [], false),
-        'Should exclude prisma directory'
-      );
+    it('should exclude generated Prisma runtimes while preserving user schema and seeds', () => {
+      // Exclude generated / runtime files
       assert.ok(
         FileCollector.isExcluded('.prisma/client/index.js', [], false),
         'Should exclude .prisma directory'
@@ -33,8 +30,33 @@ describe('FileCollector', () => {
         'Should exclude nested .prisma directory'
       );
       assert.ok(
+        FileCollector.isExcluded('prisma/runtime/client.js', [], false),
+        'Should exclude prisma/runtime directory'
+      );
+      assert.ok(
+        FileCollector.isExcluded('prisma/migrations/20240101_init/migration.sql', [], false),
+        'Should exclude prisma/migrations directory'
+      );
+
+      // Do NOT exclude legitimate user Prisma files
+      assert.equal(
+        FileCollector.isExcluded('prisma/schema.prisma', [], false),
+        false,
+        'Should NOT exclude prisma/schema.prisma'
+      );
+      assert.equal(
+        FileCollector.isExcluded('prisma/seed.ts', [], false),
+        false,
+        'Should NOT exclude prisma/seed.ts'
+      );
+      assert.equal(
         FileCollector.isExcluded('prisma', [], true),
-        'Should exclude prisma directory when traversing'
+        false,
+        'Should NOT prune root prisma directory during traversal'
+      );
+      assert.ok(
+        FileCollector.SUPPORTED_EXTENSIONS.has('.prisma'),
+        'FileCollector should support .prisma extension'
       );
     });
 

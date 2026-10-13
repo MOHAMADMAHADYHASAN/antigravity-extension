@@ -1,0 +1,146 @@
+{
+  "framework": "next",
+  "fromVersion": ">=16.0.0 <17.0.0",
+  "toVersion": ">=17.0.0",
+  "rules": [
+    {
+      "id": "next-17-cache-components-mandatory",
+      "severity": "error",
+      "category": "breaking",
+      "title": "Cache Components with 'use cache' are mandatory in Next.js 17",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "In Next.js 17, Cache Components powered by Partial Prerendering and the 'use cache' directive are the default and mandatory caching architecture. Legacy implicit fetch caching and options like { cache: 'force-cache' } are removed.",
+      "fastFilter": ["force-cache"],
+      "astPattern": {
+        "type": "identifier",
+        "name": "force-cache"
+      },
+      "message": "In Next.js 17, implicit fetch caching like `{ cache: 'force-cache' }` is removed in favor of the `'use cache'` directive.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (Next.js 15/16 legacy fetch cache)\nconst res = await fetch('https://api.example.com/data', {\n  cache: 'force-cache'\n});\n\n// ✅ AFTER (Next.js 17 Cache Components)\nasync function getCachedData() {\n  'use cache';\n  const res = await fetch('https://api.example.com/data');\n  return res.json();\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["force-cache"],
+        "astPattern": {
+          "type": "identifier",
+          "name": "force-cache"
+        }
+      },
+      "remediation": {
+        "summary": "Wrap data-fetching functions in 'use cache' directive instead of using legacy fetch cache parameters.",
+        "exampleBefore": "const res = await fetch(url, { cache: 'force-cache' });",
+        "exampleAfter": "async function getData() {\n  'use cache';\n  return fetch(url).then(r => r.json());\n}"
+      }
+    },
+    {
+      "id": "next-17-pages-router-deprecated",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "Pages router imports from 'next/router' are deprecated in Next.js 17",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "The legacy Pages router has reached maintenance mode in Next.js 17. Importing useRouter from 'next/router' is deprecated in favor of 'next/navigation' in the App Router.",
+      "fastFilter": ["next/router"],
+      "astPattern": {
+        "type": "import",
+        "source": "next/router"
+      },
+      "message": "`next/router` is deprecated in Next.js 17. Migrate to the App Router using `next/navigation`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (Pages Router)\nimport { useRouter } from 'next/router';\nconst router = useRouter();\nrouter.push('/dashboard');\n\n// ✅ AFTER (App Router)\nimport { useRouter } from 'next/navigation';\nconst router = useRouter();\nrouter.push('/dashboard');\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["next/router"],
+        "astPattern": {
+          "type": "import",
+          "source": "next/router"
+        }
+      },
+      "remediation": {
+        "summary": "Migrate Pages router routes to App Router and import useRouter from 'next/navigation'.",
+        "exampleBefore": "import { useRouter } from 'next/router';",
+        "exampleAfter": "import { useRouter } from 'next/navigation';"
+      }
+    },
+    {
+      "id": "next-17-legacy-head-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "next/head component removed in Next.js 17",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "The next/head component from the Pages router is completely removed in Next.js 17. Use the Metadata API in layout.tsx or page.tsx.",
+      "fastFilter": ["next/head"],
+      "astPattern": {
+        "type": "import",
+        "source": "next/head"
+      },
+      "message": "`next/head` has been removed in Next.js 17. Use the Metadata API instead.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (Pages Router next/head)\nimport Head from 'next/head';\nexport default function Page() {\n  return <><Head><title>My App</title></Head><h1>Home</h1></>;\n}\n\n// ✅ AFTER (App Router Metadata API)\nimport type { Metadata } from 'next';\nexport const metadata: Metadata = { title: 'My App' };\nexport default function Page() { return <h1>Home</h1>; }\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["next/head"],
+        "astPattern": {
+          "type": "import",
+          "source": "next/head"
+        }
+      },
+      "remediation": {
+        "summary": "Replace next/head with exported metadata object or generateMetadata function in App Router.",
+        "exampleBefore": "import Head from 'next/head';\n<Head><title>Dashboard</title></Head>",
+        "exampleAfter": "export const metadata = { title: 'Dashboard' };"
+      }
+    },
+    {
+      "id": "next-17-turbopack-strict-mode",
+      "severity": "error",
+      "category": "breaking",
+      "title": "Webpack configuration fallback removed; Turbopack strictly enforced in Next.js 17",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "Next.js 17 removes the legacy webpack engine entirely. Any custom webpack configuration in next.config.js that does not have Turbopack loader rules will cause compilation failure.",
+      "fastFilter": ["webpack"],
+      "astPattern": {
+        "type": "identifier",
+        "name": "webpack",
+        "context": "property"
+      },
+      "message": "Custom `webpack` config in `next.config.js` is unsupported in Next.js 17. Use `turbopack` configuration.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (next.config.js)\nmodule.exports = {\n  webpack: (config) => { return config; }\n};\n\n// ✅ AFTER (Turbopack configuration)\nmodule.exports = {\n  turbopack: {\n    rules: {\n      '*.svg': { loaders: ['@svgr/webpack'], as: '*.js' }\n    }\n  }\n};\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".mjs", ".ts"],
+        "fastFilter": ["webpack"],
+        "astPattern": {
+          "type": "identifier",
+          "name": "webpack",
+          "context": "property"
+        }
+      },
+      "remediation": {
+        "summary": "Remove webpack configuration block from next.config.js and migrate custom loaders to Turbopack rules.",
+        "exampleBefore": "const nextConfig = { webpack(config) { return config; } };",
+        "exampleAfter": "const nextConfig = { turbopack: {} };"
+      }
+    },
+    {
+      "id": "next-17-sync-dynamic-apis-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "Synchronous dynamic request APIs (cookies, headers) fail at compile-time in Next.js 17",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "Calling cookies() or headers() synchronously without await throws a compile-time build error in Next.js 17. All dynamic request APIs must be awaited.",
+      "fastFilter": ["cookies()", "headers()"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "cookies",
+        "requireAwait": true
+      },
+      "message": "Calling dynamic request APIs synchronously is a hard compile-time failure in Next.js 17. Await `cookies()` and `headers()`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport { cookies } from 'next/headers';\nconst token = cookies().get('token');\n\n// ✅ AFTER\nimport { cookies } from 'next/headers';\nconst cookieStore = await cookies();\nconst token = cookieStore.get('token');\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["cookies()", "headers()"],
+        "astPattern": {
+          "type": "callExpression",
+          "callee": "cookies",
+          "requireAwait": true
+        }
+      },
+      "remediation": {
+        "summary": "Convert synchronous cookies() and headers() calls to async/await.",
+        "exampleBefore": "const cookieStore = cookies();",
+        "exampleAfter": "const cookieStore = await cookies();"
+      }
+    }
+  ]
+}

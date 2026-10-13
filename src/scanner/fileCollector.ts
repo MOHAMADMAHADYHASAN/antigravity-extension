@@ -15,7 +15,8 @@ export class FileCollector {
     '.ts',
     '.tsx',
     '.mjs',
-    '.cjs'
+    '.cjs',
+    '.prisma'
   ]);
 
   /**
@@ -31,8 +32,11 @@ export class FileCollector {
     '**/coverage/**',
     '**/out/**',
     '**/generated/**',
-    '**/prisma/**',
     '**/.prisma/**',
+    '**/@prisma/client/**',
+    '**/prisma/runtime/**',
+    '**/prisma/client/**',
+    '**/prisma/migrations/**',
     '**/*.min.js'
   ];
 
@@ -49,7 +53,6 @@ export class FileCollector {
     'coverage',
     'out',
     'generated',
-    'prisma',
     '.prisma'
   ];
 
@@ -110,7 +113,9 @@ export class FileCollector {
           .replace(/\*\*/g, '.*')
           .replace(/(?<!\.)\*/g, '[^/]*');
         try {
-          if (new RegExp(`^${regexStr}$`).test(normalized) || new RegExp(regexStr).test(normalized)) {
+          const testPath = normalized.startsWith('/') ? normalized : '/' + normalized;
+          const reg = new RegExp(`^${regexStr}$`);
+          if (reg.test(normalized) || reg.test(testPath) || new RegExp(regexStr).test(normalized)) {
             return true;
           }
         } catch {
@@ -144,7 +149,7 @@ export class FileCollector {
         ]));
         const excludeGlob = `{${combinedExcludes.join(',')}}`;
         const uris = await vscodeModule.workspace.findFiles(
-          '**/*.{js,jsx,ts,tsx,mjs,cjs}',
+          '**/*.{js,jsx,ts,tsx,mjs,cjs,prisma}',
           excludeGlob
         );
         return uris.map((u) => u.fsPath);

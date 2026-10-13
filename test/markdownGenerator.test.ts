@@ -17,7 +17,7 @@ describe('MarkdownGenerator', () => {
       upgradeDetails: [{ framework: 'next', oldVersion: '14.2.0', newVersion: '15.0.0' }]
     });
 
-    assert.ok(md.includes('Antigravity Migration Report'));
+    assert.ok(md.includes('UpgradeLens Migration Report'));
     assert.ok(md.includes('**All Clear!**'));
     assert.ok(md.includes('15'));
   });

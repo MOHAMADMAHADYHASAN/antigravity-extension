@@ -1,0 +1,227 @@
+{
+  "framework": "prisma",
+  "fromVersion": ">=5.0.0 <6.0.0",
+  "toVersion": ">=6.0.0",
+  "rules": [
+    {
+      "id": "prisma-6-buffer-to-uint8array",
+      "severity": "error",
+      "category": "breaking",
+      "title": "Prisma Client Bytes fields return Uint8Array instead of Node.js Buffer in Prisma 6",
+      "docsUrl": "https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-6#buffer-replaced-with-uint8array-for-bytes-fields",
+      "description": "In Prisma 6, model fields of type Bytes return native JavaScript Uint8Array objects instead of Node.js Buffer. Code relying on Buffer-specific methods (like .readInt32BE() or .toString('hex')) must be wrapped in Buffer.from() or migrated to Uint8Array APIs.",
+      "fastFilter": ["Buffer.isBuffer", ".readInt", "Buffer.from"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "Buffer.isBuffer"
+      },
+      "message": "Prisma 6 returns `Uint8Array` instead of Node.js `Buffer` for `Bytes` fields.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (Prisma 5)\nconst user = await prisma.user.findUnique({ where: { id: 1 } });\nconst hex = user.avatar.toString('hex'); // Assumes Buffer\n\n// ✅ AFTER (Prisma 6)\nconst user = await prisma.user.findUniqueOrThrow({ where: { id: 1 } });\n// Convert Uint8Array to Buffer if Node buffer methods are required:\nconst hex = Buffer.from(user.avatar).toString('hex');\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".ts"],
+        "fastFilter": ["Buffer.isBuffer", ".readInt", "Buffer.from"],
+        "astPattern": {
+          "type": "callExpression",
+          "callee": "Buffer.isBuffer"
+        }
+      },
+      "remediation": {
+        "summary": "Wrap Bytes field results in Buffer.from(bytes) if Buffer-specific methods are needed, or use Uint8Array methods.",
+        "exampleBefore": "const isBuf = Buffer.isBuffer(record.data);",
+        "exampleAfter": "const buf = Buffer.from(record.data);"
+      }
+    },
+    {
+      "id": "prisma-6-not-found-error-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "NotFoundError export has been removed from @prisma/client in Prisma 6",
+      "docsUrl": "https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-6#removal-of-notfounderror",
+      "description": "The legacy NotFoundError class export has been removed from @prisma/client in Prisma 6. Check for PrismaClientKnownRequestError with error code 'P2025' instead.",
+      "fastFilter": ["NotFoundError"],
+      "astPattern": {
+        "type": "import",
+        "source": "@prisma/client",
+        "specifiers": ["NotFoundError"]
+      },
+      "message": "`NotFoundError` export has been removed from `@prisma/client` in Prisma 6. Check for error code `'P2025'`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (Prisma 5)\nimport { NotFoundError } from '@prisma/client';\nif (err instanceof NotFoundError) { /* handle 404 */ }\n\n// ✅ AFTER (Prisma 6)\nimport { Prisma } from '@prisma/client';\nif (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {\n  /* handle 404 */\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".ts"],
+        "fastFilter": ["NotFoundError"],
+        "astPattern": {
+          "type": "import",
+          "source": "@prisma/client",
+          "specifiers": ["NotFoundError"]
+        }
+      },
+      "remediation": {
+        "summary": "Replace NotFoundError with Prisma.PrismaClientKnownRequestError checking for error code 'P2025'.",
+        "exampleBefore": "import { NotFoundError } from '@prisma/client';",
+        "exampleAfter": "import { Prisma } from '@prisma/client';\n// Check (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025')"
+      }
+    },
+    {
+      "id": "prisma-6-reject-on-not-found-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "rejectOnNotFound query option has been removed in Prisma 6",
+      "docsUrl": "https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-6",
+      "description": "The rejectOnNotFound option in findUnique and findFirst queries has been removed. Use findUniqueOrThrow() and findFirstOrThrow() methods instead.",
+      "fastFilter": ["rejectOnNotFound"],
+      "astPattern": {
+        "type": "identifier",
+        "name": "rejectOnNotFound",
+        "context": "property"
+      },
+      "message": "`rejectOnNotFound` option has been removed in Prisma 6. Use `findUniqueOrThrow()` or `findFirstOrThrow()`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nconst user = await prisma.user.findUnique({\n  where: { id: 1 },\n  rejectOnNotFound: true\n});\n\n// ✅ AFTER (Prisma 6)\nconst user = await prisma.user.findUniqueOrThrow({\n  where: { id: 1 }\n});\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".ts"],
+        "fastFilter": ["rejectOnNotFound"],
+        "astPattern": {
+          "type": "identifier",
+          "name": "rejectOnNotFound",
+          "context": "property"
+        }
+      },
+      "remediation": {
+        "summary": "Remove rejectOnNotFound and call findUniqueOrThrow() or findFirstOrThrow().",
+        "exampleBefore": "await prisma.post.findUnique({ where: { id }, rejectOnNotFound: true });",
+        "exampleAfter": "await prisma.post.findUniqueOrThrow({ where: { id } });"
+      }
+    },
+    {
+      "id": "prisma-6-middleware-use-deprecated",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "prisma.$use() middleware pattern is deprecated in Prisma 6; migrate to $extends",
+      "docsUrl": "https://www.prisma.io/docs/orm/prisma-client/client-extensions",
+      "description": "The traditional prisma.$use() middleware pattern is deprecated in Prisma 6 and scheduled for complete removal in Prisma 7. Migrate all middleware logic to Prisma Client Extensions ($extends).",
+      "fastFilter": ["$use"],
+      "astPattern": {
+        "type": "memberExpression",
+        "property": "$use"
+      },
+      "message": "`prisma.$use()` middleware is deprecated in Prisma 6. Migrate to Client Extensions using `prisma.$extends()`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (Legacy $use middleware)\nprisma.$use(async (params, next) => {\n  const before = Date.now();\n  const result = await next(params);\n  console.log(`Query took ${Date.now() - before}ms`);\n  return result;\n});\n\n// ✅ AFTER (Prisma 6 $extends)\nconst prisma = new PrismaClient().$extends({\n  query: {\n    $allModels: {\n      async $allOperations({ operation, args, query }) {\n        const before = Date.now();\n        const result = await query(args);\n        console.log(`Query took ${Date.now() - before}ms`);\n        return result;\n      }\n    }\n  }\n});\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".ts"],
+        "fastFilter": ["$use"],
+        "astPattern": {
+          "type": "memberExpression",
+          "property": "$use"
+        }
+      },
+      "remediation": {
+        "summary": "Migrate prisma.$use middleware hooks to Client Extensions with prisma.$extends({ query: { ... } }).",
+        "exampleBefore": "prisma.$use(async (params, next) => { return next(params); });",
+        "exampleAfter": "const xprisma = prisma.$extends({\n  query: { $allModels: { async $allOperations({ query, args }) { return query(args); } } }\n});"
+      }
+    },
+    {
+      "id": "prisma-6-execute-raw-unsafe-warning",
+      "severity": "warning",
+      "category": "warning",
+      "title": "Usage of $executeRawUnsafe or $queryRawUnsafe without tagged parameters",
+      "docsUrl": "https://www.prisma.io/docs/orm/prisma-client/queries/raw-database-access",
+      "description": "Direct string interpolation in $executeRawUnsafe and $queryRawUnsafe is hazardous. Use the parameterized tagged template literals $executeRaw or $queryRaw.",
+      "fastFilter": ["$executeRawUnsafe", "$queryRawUnsafe"],
+      "astPattern": {
+        "type": "memberExpression",
+        "property": "$executeRawUnsafe"
+      },
+      "message": "Prefer parameterized `$executeRaw` or `$queryRaw` tagged template literals over `$executeRawUnsafe`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (Unsafe raw query)\nawait prisma.$executeRawUnsafe(`UPDATE users SET status = '${status}' WHERE id = ${id}`);\n\n// ✅ AFTER (Safe parameterized raw query)\nawait prisma.$executeRaw`UPDATE users SET status = ${status} WHERE id = ${id}`;\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".ts"],
+        "fastFilter": ["$executeRawUnsafe", "$queryRawUnsafe"],
+        "astPattern": {
+          "type": "memberExpression",
+          "property": "$executeRawUnsafe"
+        }
+      },
+      "remediation": {
+        "summary": "Replace $executeRawUnsafe with tagged template literal $executeRaw`...` to ensure SQL inputs are escaped.",
+        "exampleBefore": "await prisma.$executeRawUnsafe(`DELETE FROM users WHERE id = ${id}`);",
+        "exampleAfter": "await prisma.$executeRaw`DELETE FROM users WHERE id = ${id}`;"
+      }
+    },
+    {
+      "id": "prisma-6-schema-driver-adapters-ga",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "driverAdapters preview feature is GA in Prisma 6",
+      "docsUrl": "https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-6#driver-adapters-are-now-generally-available",
+      "description": "Driver Adapters graduated from preview to General Availability (GA) in Prisma 6. Remove 'driverAdapters' from generator previewFeatures.",
+      "fastFilter": ["driverAdapters"],
+      "astPattern": {
+        "type": "previewFeature",
+        "feature": "driverAdapters"
+      },
+      "message": "`driverAdapters` preview feature is GA in Prisma 6 and no longer needed in `previewFeatures`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```prisma\n// ❌ BEFORE (Prisma 5)\ngenerator client {\n  provider        = \"prisma-client-js\"\n  previewFeatures = [\"driverAdapters\"]\n}\n\n// ✅ AFTER (Prisma 6)\ngenerator client {\n  provider = \"prisma-client-js\"\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".prisma"],
+        "fastFilter": ["driverAdapters"],
+        "astPattern": {
+          "type": "previewFeature",
+          "feature": "driverAdapters"
+        }
+      },
+      "remediation": {
+        "summary": "Remove 'driverAdapters' from previewFeatures in generator client block.",
+        "exampleBefore": "previewFeatures = [\"driverAdapters\"]",
+        "exampleAfter": "// Removed 'driverAdapters'"
+      }
+    },
+    {
+      "id": "prisma-6-schema-relation-joins-ga",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "relationJoins preview feature is GA in Prisma 6",
+      "docsUrl": "https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-6#relation-joins-are-now-generally-available",
+      "description": "Relation Joins graduated to General Availability (GA) in Prisma 6. Remove 'relationJoins' from previewFeatures.",
+      "fastFilter": ["relationJoins"],
+      "astPattern": {
+        "type": "previewFeature",
+        "feature": "relationJoins"
+      },
+      "message": "`relationJoins` is now Generally Available in Prisma 6 and does not require previewFeatures.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```prisma\n// ❌ BEFORE\npreviewFeatures = [\"relationJoins\"]\n\n// ✅ AFTER (Prisma 6)\n// Removed 'relationJoins'\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".prisma"],
+        "fastFilter": ["relationJoins"],
+        "astPattern": {
+          "type": "previewFeature",
+          "feature": "relationJoins"
+        }
+      },
+      "remediation": {
+        "summary": "Remove 'relationJoins' from previewFeatures list.",
+        "exampleBefore": "previewFeatures = [\"relationJoins\"]",
+        "exampleAfter": "// Removed 'relationJoins'"
+      }
+    },
+    {
+      "id": "prisma-6-schema-json-protocol-deprecated",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "jsonProtocol preview feature is default and obsolete in Prisma 6",
+      "docsUrl": "https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-6",
+      "description": "The JSON wire protocol is the default protocol in Prisma 6. The jsonProtocol previewFeatures flag is deprecated and obsolete.",
+      "fastFilter": ["jsonProtocol"],
+      "astPattern": {
+        "type": "previewFeature",
+        "feature": "jsonProtocol"
+      },
+      "message": "`jsonProtocol` is default in Prisma 6 and should be removed from `previewFeatures`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```prisma\n// ❌ BEFORE\npreviewFeatures = [\"jsonProtocol\"]\n\n// ✅ AFTER (Prisma 6)\n// Removed 'jsonProtocol'\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".prisma"],
+        "fastFilter": ["jsonProtocol"],
+        "astPattern": {
+          "type": "previewFeature",
+          "feature": "jsonProtocol"
+        }
+      },
+      "remediation": {
+        "summary": "Remove 'jsonProtocol' from previewFeatures in schema.prisma.",
+        "exampleBefore": "previewFeatures = [\"jsonProtocol\"]",
+        "exampleAfter": "// Removed 'jsonProtocol'"
+      }
+    }
+  ]
+}

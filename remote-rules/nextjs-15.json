@@ -1,0 +1,354 @@
+[
+  {
+    "id": "next-15-async-cookies",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "breaking",
+    "title": "cookies() is now asynchronous in Next.js 15",
+    "docsUrl": "https://nextjs.org/docs/messages/sync-dynamic-apis",
+    "description": "In Next.js 15, cookies() is an asynchronous function that returns a Promise. Calling it synchronously or accessing properties without await is deprecated and will fail in production.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["cookies()", "cookies("],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "cookies",
+        "requireAwait": true
+      }
+    },
+    "remediation": {
+      "summary": "Await the cookies() call before accessing methods like .get() or .set().",
+      "exampleBefore": "const cookieStore = cookies();\nconst token = cookieStore.get('token');",
+      "exampleAfter": "const cookieStore = await cookies();\nconst token = cookieStore.get('token');"
+    }
+  },
+  {
+    "id": "next-15-async-headers",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "breaking",
+    "title": "headers() is now asynchronous in Next.js 15",
+    "docsUrl": "https://nextjs.org/docs/messages/sync-dynamic-apis",
+    "description": "In Next.js 15, headers() is an asynchronous function that returns a Promise. Synchronous calls must be converted to async/await.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["headers()", "headers("],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "headers",
+        "requireAwait": true
+      }
+    },
+    "remediation": {
+      "summary": "Add await before headers() and mark the enclosing function async.",
+      "exampleBefore": "const headersList = headers();\nconst auth = headersList.get('authorization');",
+      "exampleAfter": "const headersList = await headers();\nconst auth = headersList.get('authorization');"
+    }
+  },
+  {
+    "id": "next-15-async-draft-mode",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "breaking",
+    "title": "draftMode() is now asynchronous in Next.js 15",
+    "docsUrl": "https://nextjs.org/docs/messages/sync-dynamic-apis",
+    "description": "draftMode() returns a Promise in Next.js 15. Calling it synchronously or accessing properties like .isEnabled without await is deprecated and will fail in production.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["draftMode(", "draftMode()"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "draftMode",
+        "requireAwait": true
+      }
+    },
+    "remediation": {
+      "summary": "Add await before draftMode() and ensure the enclosing scope is async.",
+      "exampleBefore": "import { draftMode } from 'next/headers';\n\nexport default function Page() {\n  const { isEnabled } = draftMode();\n  return <div>{isEnabled ? 'Draft' : 'Published'}</div>;\n}",
+      "exampleAfter": "import { draftMode } from 'next/headers';\n\nexport default async function Page() {\n  const { isEnabled } = await draftMode();\n  return <div>{isEnabled ? 'Draft' : 'Published'}</div>;\n}"
+    }
+  },
+  {
+    "id": "next-15-nextrequest-geo-removed",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "breaking",
+    "title": "request.geo removed from NextRequest",
+    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading/version-15#nextrequestgeo-and-nextrequestip",
+    "description": "The geo property has been removed from NextRequest. Use the geolocation helper from the @vercel/functions package or platform-specific headers.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": [".geo"],
+      "astPattern": {
+        "type": "memberExpression",
+        "object": "request",
+        "property": "geo"
+      }
+    },
+    "remediation": {
+      "summary": "Import geolocation from @vercel/functions and pass the request object.",
+      "exampleBefore": "import { NextRequest, NextResponse } from 'next/server';\n\nexport function middleware(request: NextRequest) {\n  const country = request.geo?.country || 'US';\n  return NextResponse.next();\n}",
+      "exampleAfter": "import { NextRequest, NextResponse } from 'next/server';\nimport { geolocation } from '@vercel/functions';\n\nexport function middleware(request: NextRequest) {\n  const country = geolocation(request).country || 'US';\n  return NextResponse.next();\n}"
+    }
+  },
+  {
+    "id": "next-15-nextrequest-ip-removed",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "breaking",
+    "title": "request.ip removed from NextRequest",
+    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading/version-15#nextrequestgeo-and-nextrequestip",
+    "description": "The ip property has been removed from NextRequest. Use the ipAddress helper from the @vercel/functions package or inspect the x-forwarded-for header.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": [".ip"],
+      "astPattern": {
+        "type": "memberExpression",
+        "object": "request",
+        "property": "ip"
+      }
+    },
+    "remediation": {
+      "summary": "Import ipAddress from @vercel/functions and pass the request object.",
+      "exampleBefore": "import { NextRequest, NextResponse } from 'next/server';\n\nexport function middleware(request: NextRequest) {\n  const clientIp = request.ip;\n  return NextResponse.next();\n}",
+      "exampleAfter": "import { NextRequest, NextResponse } from 'next/server';\nimport { ipAddress } from '@vercel/functions';\n\nexport function middleware(request: NextRequest) {\n  const clientIp = ipAddress(request);\n  return NextResponse.next();\n}"
+    }
+  },
+  {
+    "id": "next-15-fetch-cache-default-changed",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "warning",
+    "title": "fetch() caching default changed from cached to uncached",
+    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading/version-15#fetch-requests",
+    "description": "In Next.js 15, fetch requests are uncached by default (cache: 'no-store' instead of 'force-cache'). If static caching is required, explicitly opt in.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["fetch("],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "fetch"
+      }
+    },
+    "remediation": {
+      "summary": "Explicitly specify { cache: 'force-cache' } or { next: { revalidate: ... } } if cached responses are intended.",
+      "exampleBefore": "// In Next.js 14, this was cached by default:\nconst res = await fetch('https://api.example.com/data');",
+      "exampleAfter": "// In Next.js 15, explicitly declare cache option if caching is desired:\nconst res = await fetch('https://api.example.com/data', {\n  cache: 'force-cache'\n});"
+    }
+  },
+  {
+    "id": "next-15-route-handlers-uncached-by-default",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "warning",
+    "title": "GET Route Handlers are no longer cached by default",
+    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading/version-15#route-handlers",
+    "description": "GET Route Handlers in Next.js 15 are uncached by default and execute on every request unless configured with export const dynamic = 'force-static'.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["function GET("],
+      "astPattern": {
+        "type": "identifier",
+        "name": "GET"
+      }
+    },
+    "remediation": {
+      "summary": "Export dynamic = 'force-static' if static generation / caching is intended for this route handler.",
+      "exampleBefore": "export async function GET() {\n  const data = await fetch('https://api.example.com/items').then(r => r.json());\n  return Response.json(data);\n}",
+      "exampleAfter": "export const dynamic = 'force-static';\n\nexport async function GET() {\n  const data = await fetch('https://api.example.com/items').then(r => r.json());\n  return Response.json(data);\n}"
+    }
+  },
+  {
+    "id": "next-15-app-router-legacy-router",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "breaking",
+    "title": "next/router import is unsupported in App Router directory",
+    "docsUrl": "https://nextjs.org/docs/messages/next-router-not-mounted",
+    "description": "Importing useRouter from 'next/router' causes a runtime crash when rendered in App Router routes (app/**). Use 'next/navigation' instead.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["next/router"],
+      "astPattern": {
+        "type": "import",
+        "source": "next/router",
+        "pathPattern": "**/app/**"
+      }
+    },
+    "remediation": {
+      "summary": "Update the import from 'next/router' to 'next/navigation'.",
+      "exampleBefore": "import { useRouter } from 'next/router';",
+      "exampleAfter": "import { useRouter } from 'next/navigation';"
+    }
+  },
+  {
+    "id": "next-15-legacy-image-props",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "breaking",
+    "title": "Deprecated layout and objectFit props on <Image>",
+    "docsUrl": "https://nextjs.org/docs/messages/legacy-image-upgrade",
+    "description": "Legacy props 'layout' and 'objectFit' on next/image are removed. Use the boolean 'fill' prop and standard style attribute.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["layout=", "objectFit="],
+      "astPattern": {
+        "type": "jsxAttribute",
+        "element": "Image",
+        "attribute": "layout"
+      }
+    },
+    "remediation": {
+      "summary": "Replace layout=\"fill\" with fill, and objectFit with style={{ objectFit: '...' }}.",
+      "exampleBefore": "<Image src=\"/hero.png\" layout=\"fill\" objectFit=\"cover\" />",
+      "exampleAfter": "<Image src=\"/hero.png\" fill style={{ objectFit: 'cover' }} />"
+    }
+  },
+  {
+    "id": "next-15-next-legacy-image-removed",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "breaking",
+    "title": "next/legacy/image module removed",
+    "docsUrl": "https://nextjs.org/docs/messages/legacy-image-upgrade",
+    "description": "The next/legacy/image module has been completely removed in Next.js 15. Migrate to next/image.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["next/legacy/image"],
+      "astPattern": {
+        "type": "import",
+        "source": "next/legacy/image"
+      }
+    },
+    "remediation": {
+      "summary": "Change import to next/image and adapt legacy props to modern fill/style attributes.",
+      "exampleBefore": "import Image from 'next/legacy/image';",
+      "exampleAfter": "import Image from 'next/image';"
+    }
+  },
+  {
+    "id": "next-15-next-font-package-removed",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "breaking",
+    "title": "@next/font package removed in favor of built-in next/font",
+    "docsUrl": "https://nextjs.org/docs/messages/deprecated-next-font",
+    "description": "The separate @next/font package is removed in Next.js 15. Use the built-in next/font module.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["@next/font/google", "@next/font/local", "@next/font"],
+      "astPattern": {
+        "type": "import",
+        "source": "@next/font/google"
+      }
+    },
+    "remediation": {
+      "summary": "Update import from @next/font to next/font.",
+      "exampleBefore": "import { Inter } from '@next/font/google';",
+      "exampleAfter": "import { Inter } from 'next/font/google';"
+    }
+  },
+  {
+    "id": "next-15-react-use-form-state",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "deprecation",
+    "title": "useFormState replaced by useActionState in React 19",
+    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading/version-15#react-19",
+    "description": "In React 19 (required by Next.js 15), useFormState from react-dom is deprecated in favor of useActionState from react.",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["useFormState"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "useFormState"
+      }
+    },
+    "remediation": {
+      "summary": "Replace useFormState from 'react-dom' with useActionState from 'react'.",
+      "exampleBefore": "import { useFormState } from 'react-dom';\nconst [state, formAction] = useFormState(fn, initialState);",
+      "exampleAfter": "import { useActionState } from 'react';\nconst [state, formAction, isPending] = useActionState(fn, initialState);"
+    }
+  },
+  {
+    "id": "next-15-unstable-after-deprecated",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "deprecation",
+    "title": "unstable_after stabilized to after()",
+    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading/version-15#after",
+    "description": "unstable_after from next/server has been stabilized as after().",
+    "detection": {
+      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+      "fastFilter": ["unstable_after"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "unstable_after"
+      }
+    },
+    "remediation": {
+      "summary": "Import after instead of unstable_after from 'next/server'.",
+      "exampleBefore": "import { unstable_after as after } from 'next/server';",
+      "exampleAfter": "import { after } from 'next/server';"
+    }
+  },
+  {
+    "id": "next-15-config-server-external-packages",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "deprecation",
+    "title": "experimental.serverExternalPackages moved to root serverExternalPackages",
+    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading/version-15#serverexternalpackages",
+    "description": "experimental.serverExternalPackages in next.config.js has been stabilized and moved to root serverExternalPackages.",
+    "detection": {
+      "fileExtensions": [".js", ".mjs", ".ts"],
+      "fastFilter": ["serverExternalPackages"],
+      "astPattern": {
+        "type": "identifier",
+        "name": "serverExternalPackages"
+      }
+    },
+    "remediation": {
+      "summary": "Move serverExternalPackages out of experimental to the root next.config level.",
+      "exampleBefore": "const nextConfig = {\n  experimental: {\n    serverExternalPackages: ['package-name'],\n  },\n};",
+      "exampleAfter": "const nextConfig = {\n  serverExternalPackages: ['package-name'],\n};"
+    }
+  },
+  {
+    "id": "next-15-config-swc-minify-removed",
+    "framework": "next",
+    "fromVersion": ">=14.0.0 <15.0.0",
+    "toVersion": ">=15.0.0",
+    "severity": "deprecation",
+    "title": "swcMinify removed from next.config.js",
+    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading/version-15",
+    "description": "The swcMinify configuration option in next.config.js has been removed. SWC minification is enabled by default.",
+    "detection": {
+      "fileExtensions": [".js", ".mjs", ".ts"],
+      "fastFilter": ["swcMinify"],
+      "astPattern": {
+        "type": "identifier",
+        "name": "swcMinify"
+      }
+    },
+    "remediation": {
+      "summary": "Remove swcMinify from next.config.js.",
+      "exampleBefore": "const nextConfig = {\n  swcMinify: true,\n};",
+      "exampleAfter": "const nextConfig = {};"
+    }
+  }
+]

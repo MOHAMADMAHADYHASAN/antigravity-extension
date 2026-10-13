@@ -3,7 +3,8 @@ import type * as vscode from 'vscode';
 import { DependencyDiff, DependencyMap, DiffType } from '../types/tracker';
 
 export class VersionTracker {
-  private static readonly SNAPSHOT_STORAGE_KEY_PREFIX = 'antigravity.snapshot.';
+  private static readonly SNAPSHOT_STORAGE_KEY_PREFIX = 'upgradelens.snapshot.';
+  private static readonly LEGACY_SNAPSHOT_STORAGE_KEY_PREFIX = 'antigravity.snapshot.';
 
   /**
    * Extracts combined dependencies and devDependencies from package.json content
@@ -158,7 +159,12 @@ export class VersionTracker {
     packageJsonPath: string
   ): DependencyMap | undefined {
     const key = `${VersionTracker.SNAPSHOT_STORAGE_KEY_PREFIX}${packageJsonPath}`;
-    return context.workspaceState.get<DependencyMap>(key);
+    const saved = context.workspaceState.get<DependencyMap>(key);
+    if (saved) {
+      return saved;
+    }
+    const legacyKey = `${VersionTracker.LEGACY_SNAPSHOT_STORAGE_KEY_PREFIX}${packageJsonPath}`;
+    return context.workspaceState.get<DependencyMap>(legacyKey);
   }
 
   /**

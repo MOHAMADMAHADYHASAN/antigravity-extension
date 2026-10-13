@@ -6,6 +6,7 @@ import {
   IdentifierPattern,
   ImportPattern,
   JsxAttributePattern,
+  JsxElementPattern,
   MemberExpressionPattern,
   MigrationRule
 } from '../types/rules';
@@ -15,13 +16,20 @@ import { ScanIssue } from '../types/scanner';
 const traverse = typeof _traverse === 'function' ? _traverse : (_traverse as any).default;
 
 /**
- * Helper to recursively extract the member access chain from a MemberExpression or Identifier
- * e.g. a.b.c -> "a.b.c", cookies -> "cookies"
+ * Helper to recursively extract the member access chain from a MemberExpression, JSXMemberExpression, or Identifier
+ * e.g. a.b.c -> "a.b.c", cookies -> "cookies", this.refs -> "this.refs"
  */
 function getMemberText(node: any): string {
   if (!node) return '';
   if (node.type === 'Identifier') return node.name;
+  if (node.type === 'JSXIdentifier') return node.name;
+  if (node.type === 'ThisExpression') return 'this';
   if (node.type === 'StringLiteral') return node.value;
+  if (node.type === 'JSXMemberExpression') {
+    const obj = getMemberText(node.object);
+    const prop = getMemberText(node.property);
+    return obj && prop ? `${obj}.${prop}` : prop || obj;
+  }
   if (node.type === 'MemberExpression') {
     const obj = getMemberText(node.object);
     const prop =
@@ -118,6 +126,7 @@ export class AstScanner {
     const memberRules: { rule: MigrationRule; pattern: MemberExpressionPattern }[] = [];
     const importRules: { rule: MigrationRule; pattern: ImportPattern }[] = [];
     const jsxRules: { rule: MigrationRule; pattern: JsxAttributePattern }[] = [];
+    const jsxElementRules: { rule: MigrationRule; pattern: JsxElementPattern }[] = [];
     const idRules: { rule: MigrationRule; pattern: IdentifierPattern }[] = [];
     const asyncApiRules: { rule: MigrationRule; pattern: AsyncRequestApiPattern }[] = [];
 
@@ -127,6 +136,7 @@ export class AstScanner {
       else if (p.type === 'memberExpression') memberRules.push({ rule, pattern: p });
       else if (p.type === 'import') importRules.push({ rule, pattern: p });
       else if (p.type === 'jsxAttribute') jsxRules.push({ rule, pattern: p });
+      else if (p.type === 'jsxElement') jsxElementRules.push({ rule, pattern: p });
       else if (p.type === 'identifier') idRules.push({ rule, pattern: p });
       else if (p.type === 'asyncRequestApi') asyncApiRules.push({ rule, pattern: p });
     }
@@ -181,7 +191,8 @@ export class AstScanner {
           for (const { rule, pattern } of callRules) {
             const matchesCallee =
               pattern.callee === calleeText ||
-              (simpleCallee && pattern.callee === simpleCallee);
+              (simpleCallee && pattern.callee === simpleCallee) ||
+              calleeText.endsWith(`.${pattern.callee}`);
 
             if (matchesCallee) {
               if (pattern.argCount !== undefined && path.node.arguments.length !== pattern.argCount) {
@@ -335,6 +346,29 @@ export class AstScanner {
             } else {
               addIssue(rule, path.node.loc?.start);
             }
+          }
+        }
+      },
+
+      // 5. Check JSX Opening Elements (e.g. <Context.Provider>, <ThemeContext.Provider>)
+      JSXOpeningElement(path: any) {
+        if (jsxElementRules.length === 0) return;
+        const tagText = getMemberText(path.node.name);
+        const propName =
+          path.node.name.type === 'JSXMemberExpression'
+            ? getMemberText(path.node.name.property)
+            : '';
+
+        for (const { rule, pattern } of jsxElementRules) {
+          const matchesProp = Boolean(pattern.property && propName === pattern.property);
+          const matchesName = Boolean(
+            pattern.name &&
+              (tagText === pattern.name ||
+                (pattern.name.startsWith('*.') && tagText.endsWith(pattern.name.slice(1))))
+          );
+
+          if (matchesProp || matchesName) {
+            addIssue(rule, path.node.loc?.start);
           }
         }
       },
