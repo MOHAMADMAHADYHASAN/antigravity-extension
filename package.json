@@ -2,7 +2,7 @@
   "name": "upgradelens",
   "displayName": "UpgradeLens - Framework Migration Assistant",
   "description": "Scans your codebase on framework upgrades (Next.js, React, Prisma, etc.) and generates actionable migration reports.",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "publisher": "antigravity",
   "repository": {
     "type": "git",
