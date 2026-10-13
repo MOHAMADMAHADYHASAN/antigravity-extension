@@ -2,6 +2,7 @@ import * as path from 'path';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { PrismaSchemaScanner } from '../src/scanner/prismaSchemaScanner';
+import { ScanEngine } from '../src/scanner/scanEngine';
 import { RuleRegistry } from '../src/rules/ruleRegistry';
 
 describe('PrismaSchemaScanner', () => {
@@ -91,5 +92,43 @@ describe('PrismaSchemaScanner', () => {
 
     const issues = PrismaSchemaScanner.scanFile('prisma/schema.prisma', schemaContent, nextRules);
     assert.equal(issues.length, 0, 'Should not match Next.js rules against schema.prisma');
+  });
+
+  it('should strictly ignore React rules even if schema content contains matching fastFilter keywords', () => {
+    const schemaWithReactKeywords = [
+      '// Warning: ReactDOM.render or createRef should not trigger React rules here',
+      'datasource db {',
+      '  provider = "postgresql"',
+      '  url      = env("DATABASE_URL")',
+      '}',
+      'model User {',
+      '  id Int @id',
+      '  render String',
+      '}'
+    ].join('\n');
+
+    const reactRules = registry.getRulesForUpgrade('react', '18.0.0', '19.0.0');
+    assert.ok(reactRules.length > 0, 'Should have React rules loaded');
+
+    const issues = PrismaSchemaScanner.scanFile('prisma/schema.prisma', schemaWithReactKeywords, reactRules);
+    assert.equal(issues.length, 0, 'Must produce 0 issues when scanning .prisma file with React rules');
+  });
+
+  it('should completely exclude .prisma files in ScanEngine when executing pure React rules', async () => {
+    const reactRules = registry.getRulesForUpgrade('react', '18.0.0', '19.0.0');
+    const scannedFiles: string[] = [];
+
+    const result = await ScanEngine.runScan({
+      rootPath: path.join(__dirname, 'fixtures', 'sample-app'),
+      rules: reactRules,
+      onProgress: (_scanned, _total, currentFile) => {
+        scannedFiles.push(currentFile);
+      }
+    });
+
+    const prismaFileScanned = scannedFiles.some((f) => f.endsWith('.prisma'));
+    assert.equal(prismaFileScanned, false, 'No .prisma file should be processed during a React scan');
+    const prismaIssues = result.issues.filter((i) => i.framework === 'prisma' || i.filePath.endsWith('.prisma'));
+    assert.equal(prismaIssues.length, 0, 'No Prisma issues should ever be returned from a React scan');
   });
 });

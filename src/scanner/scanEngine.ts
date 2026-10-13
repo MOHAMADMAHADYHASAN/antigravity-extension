@@ -24,17 +24,19 @@ export class ScanEngine {
     }
 
     const files = await FileCollector.collectFiles(rootPath, excludeGlobs);
+    const hasPrismaRules = rules.some((r) => r.framework === 'prisma');
+    const targetFiles = hasPrismaRules ? files : files.filter((f) => !f.endsWith('.prisma'));
     const issues: ScanIssue[] = [];
     const filesWithIssuesSet = new Set<string>();
 
-    for (let i = 0; i < files.length; i++) {
+    for (let i = 0; i < targetFiles.length; i++) {
       if (cancellationToken?.isCancellationRequested) {
         break;
       }
 
-      const file = files[i];
+      const file = targetFiles[i];
       if (onProgress) {
-        onProgress(i + 1, files.length, file);
+        onProgress(i + 1, targetFiles.length, file);
       }
 
       let content: string;
@@ -65,7 +67,7 @@ export class ScanEngine {
     const frameworks = Array.from(new Set(rules.map((r) => r.framework)));
 
     return {
-      totalFilesScanned: files.length,
+      totalFilesScanned: targetFiles.length,
       filesWithIssues: filesWithIssuesSet.size,
       issues,
       durationMs,
