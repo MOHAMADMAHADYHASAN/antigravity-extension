@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { AstScanner } from '../src/scanner/astScanner';
@@ -257,6 +258,51 @@ describe('AstScanner', () => {
 
       assert.ok(configIssue, 'Should flag serverRuntimeConfig in next.config.js');
       assert.equal(configIssue.line, 2);
+    });
+  });
+
+  describe('Prisma 6 AST detection', () => {
+    const remoteRulesDir = path.join(__dirname, '..', 'remote-rules');
+    registry.loadFromDirectory(remoteRulesDir);
+    const prismaRules = registry.getRulesForUpgrade('prisma', '5.20.0', '6.0.0');
+
+    it('should detect rejectOnNotFound option in prisma queries', () => {
+      const code = [
+        'const user = await prisma.user.findUnique({',
+        '  where: { id: 1 },',
+        '  rejectOnNotFound: true', // Line 3
+        '});'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('src/services/user.ts', code, prismaRules);
+      const issue = issues.find((i) => i.ruleId === 'prisma-6-reject-on-not-found-removed');
+      assert.ok(issue, 'Should flag rejectOnNotFound');
+      assert.equal(issue.line, 3);
+    });
+
+    it('should detect NotFoundError from @prisma/client', () => {
+      const code = [
+        "import { NotFoundError } from '@prisma/client';", // Line 1
+        "export function handleError() { throw new NotFoundError('Not found'); }"
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('src/utils/errors.ts', code, prismaRules);
+      const issue = issues.find((i) => i.ruleId === 'prisma-6-not-found-error-removed');
+      assert.ok(issue, 'Should flag NotFoundError import');
+      assert.equal(issue.line, 1);
+    });
+
+    it('should detect prisma.$use middleware calls', () => {
+      const code = [
+        'prisma.$use(async (params, next) => {', // Line 1
+        '  return next(params);',
+        '});'
+      ].join('\n');
+
+      const issues = AstScanner.scanFile('src/prisma/middleware.ts', code, prismaRules);
+      const issue = issues.find((i) => i.ruleId === 'prisma-6-middleware-use-deprecated');
+      assert.ok(issue, 'Should flag prisma.$use call');
+      assert.equal(issue.line, 1);
     });
   });
 });

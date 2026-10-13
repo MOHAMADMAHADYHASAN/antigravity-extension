@@ -1,0 +1,117 @@
+{
+  "framework": "react",
+  "fromVersion": ">=19.0.0 <20.0.0",
+  "toVersion": ">=20.0.0",
+  "rules": [
+    {
+      "id": "react-20-forward-ref-deprecated",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "forwardRef is deprecated; ref is a standard prop on function components",
+      "docsUrl": "https://react.dev/reference/react/forwardRef",
+      "description": "In React 19+, ref is available as a standard prop passed directly to function components. forwardRef wrapper is deprecated and will be removed in React 20.",
+      "fastFilter": ["forwardRef"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "forwardRef"
+      },
+      "message": "`forwardRef` is deprecated. Pass `ref` directly as a prop to function components.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (React 18/19 wrapper)\nconst MyButton = forwardRef((props, ref) => {\n  return <button ref={ref} {...props} />;\n});\n\n// ✅ AFTER (React 19/20 ref prop)\nfunction MyButton({ ref, ...props }: { ref?: React.Ref<HTMLButtonElement> }) {\n  return <button ref={ref} {...props} />;\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".jsx", ".tsx"],
+        "fastFilter": ["forwardRef"],
+        "astPattern": {
+          "type": "callExpression",
+          "callee": "forwardRef"
+        }
+      },
+      "remediation": {
+        "summary": "Remove forwardRef wrapper and receive ref directly in component props.",
+        "exampleBefore": "const Input = forwardRef((props, ref) => <input ref={ref} />);",
+        "exampleAfter": "function Input({ ref, ...props }) { return <input ref={ref} />; }"
+      }
+    },
+    {
+      "id": "react-20-default-props-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "defaultProps on function components has been removed in React 20",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-react-apis",
+      "description": "Defining defaultProps on function components has been removed. Use JavaScript default parameter values in the component arguments list.",
+      "fastFilter": ["defaultProps"],
+      "astPattern": {
+        "type": "memberExpression",
+        "property": "defaultProps"
+      },
+      "message": "`defaultProps` on function components is removed in React 20. Use ES6 default parameter syntax.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nfunction Badge({ color }: { color?: string }) {\n  return <span className={color} />;\n}\nBadge.defaultProps = { color: 'blue' };\n\n// ✅ AFTER\nfunction Badge({ color = 'blue' }: { color?: string }) {\n  return <span className={color} />;\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["defaultProps"],
+        "astPattern": {
+          "type": "memberExpression",
+          "property": "defaultProps"
+        }
+      },
+      "remediation": {
+        "summary": "Replace defaultProps with ES6 default parameter destructuring in component arguments.",
+        "exampleBefore": "MyComponent.defaultProps = { theme: 'light' };",
+        "exampleAfter": "function MyComponent({ theme = 'light' }) {}"
+      }
+    },
+    {
+      "id": "react-20-legacy-context-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "Legacy Context API (contextTypes, childContextTypes) has been removed in React 20",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-react-apis",
+      "description": "The legacy Context API using contextTypes and childContextTypes has been completely removed in React 20. Use React.createContext() and the use(Context) hook.",
+      "fastFilter": ["contextTypes", "childContextTypes"],
+      "astPattern": {
+        "type": "identifier",
+        "name": "contextTypes",
+        "context": "property"
+      },
+      "message": "Legacy Context API (`contextTypes`) is removed in React 20. Migrate to `React.createContext()`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (Legacy Context)\nclass Child extends React.Component {\n  static contextTypes = { theme: PropTypes.string };\n}\n\n// ✅ AFTER (Modern Context)\nconst ThemeContext = React.createContext('light');\nfunction Child() {\n  const theme = use(ThemeContext);\n  return <div className={theme} />;\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["contextTypes", "childContextTypes"],
+        "astPattern": {
+          "type": "identifier",
+          "name": "contextTypes",
+          "context": "property"
+        }
+      },
+      "remediation": {
+        "summary": "Migrate legacy contextTypes to React.createContext() and the use(Context) hook.",
+        "exampleBefore": "Component.contextTypes = { store: PropTypes.object };",
+        "exampleAfter": "const store = use(StoreContext);"
+      }
+    },
+    {
+      "id": "react-20-test-utils-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "react-dom/test-utils package has been completely removed in React 20",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-reactdom-apis",
+      "description": "react-dom/test-utils has been completely removed in React 20. Migrate unit tests to @testing-library/react and import act from 'react'.",
+      "fastFilter": ["react-dom/test-utils"],
+      "astPattern": {
+        "type": "import",
+        "source": "react-dom/test-utils"
+      },
+      "message": "`react-dom/test-utils` has been removed in React 20. Use `@testing-library/react`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport { act } from 'react-dom/test-utils';\n\n// ✅ AFTER\nimport { act } from 'react';\n// or\nimport { render, screen } from '@testing-library/react';\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["react-dom/test-utils"],
+        "astPattern": {
+          "type": "import",
+          "source": "react-dom/test-utils"
+        }
+      },
+      "remediation": {
+        "summary": "Remove react-dom/test-utils imports and migrate to @testing-library/react.",
+        "exampleBefore": "import { act } from 'react-dom/test-utils';",
+        "exampleAfter": "import { act } from 'react';"
+      }
+    }
+  ]
+}

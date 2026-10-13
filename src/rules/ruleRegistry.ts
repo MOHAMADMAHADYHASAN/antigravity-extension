@@ -94,9 +94,10 @@ export class RuleRegistry {
           const filePath = path.join(dirPath, file);
           const raw = fs.readFileSync(filePath, 'utf-8');
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            this.registerCustomRules(parsed as MigrationRule[]);
-            count += parsed.length;
+          const normalized = RemoteRuleLoader.normalizeRulesPayload(parsed);
+          if (normalized && normalized.length > 0) {
+            this.registerCustomRules(normalized);
+            count += normalized.length;
           }
         }
       }
@@ -335,6 +336,8 @@ export class RuleRegistry {
         const techCandidates = [normTech];
         if (normTech === 'next') techCandidates.push('nextjs');
         if (normTech === 'nextjs') techCandidates.push('next');
+        if (normTech === 'prisma') techCandidates.push('@prisma/client');
+        if (normTech === '@prisma/client') techCandidates.push('prisma');
 
         let techMap: Record<string, string> | undefined;
         for (const cand of techCandidates) {
@@ -389,9 +392,10 @@ export class RuleRegistry {
         if (!rules) {
           try {
             const rawRules = await RuleRegistry.fetchJson<unknown>(url, timeoutMs);
-            if (Array.isArray(rawRules)) {
+            const normalized = RemoteRuleLoader.normalizeRulesPayload(rawRules);
+            if (normalized && normalized.length > 0) {
               const validInFile: MigrationRule[] = [];
-              for (const r of rawRules) {
+              for (const r of normalized) {
                 if (RuleRegistry.validateRule(r)) {
                   validInFile.push(r);
                 }
@@ -411,9 +415,10 @@ export class RuleRegistry {
                 if (fs.existsSync(loc)) {
                   const raw = fs.readFileSync(loc, 'utf-8');
                   const parsed = JSON.parse(raw);
-                  if (Array.isArray(parsed)) {
+                  const normalized = RemoteRuleLoader.normalizeRulesPayload(parsed);
+                  if (normalized && normalized.length > 0) {
                     const validInFile: MigrationRule[] = [];
-                    for (const r of parsed) {
+                    for (const r of normalized) {
                       if (RuleRegistry.validateRule(r)) {
                         validInFile.push(r);
                       }

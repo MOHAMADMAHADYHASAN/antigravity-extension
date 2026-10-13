@@ -1,0 +1,231 @@
+{
+  "framework": "react",
+  "fromVersion": ">=18.0.0 <19.0.0",
+  "toVersion": ">=19.0.0",
+  "rules": [
+    {
+      "id": "react-19-removed-reactdom-render",
+      "severity": "error",
+      "category": "breaking",
+      "title": "ReactDOM.render has been removed in React 19",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-reactdom-apis",
+      "description": "ReactDOM.render has been removed in React 19. Applications must migrate to createRoot from 'react-dom/client'.",
+      "fastFilter": ["ReactDOM.render", "render("],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "ReactDOM.render"
+      },
+      "message": "`ReactDOM.render` has been removed in React 19. Use `createRoot` instead.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (React 18 and earlier)\nimport ReactDOM from 'react-dom';\nReactDOM.render(<App />, document.getElementById('root'));\n\n// ✅ AFTER (React 19)\nimport { createRoot } from 'react-dom/client';\nconst root = createRoot(document.getElementById('root')!);\nroot.render(<App />);\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["ReactDOM.render", "render("],
+        "astPattern": {
+          "type": "callExpression",
+          "callee": "ReactDOM.render"
+        }
+      },
+      "remediation": {
+        "summary": "Migrate ReactDOM.render to createRoot from 'react-dom/client'.",
+        "exampleBefore": "import ReactDOM from 'react-dom';\nReactDOM.render(<App />, container);",
+        "exampleAfter": "import { createRoot } from 'react-dom/client';\nconst root = createRoot(container);\nroot.render(<App />);"
+      }
+    },
+    {
+      "id": "react-19-removed-unmount-component-at-node",
+      "severity": "error",
+      "category": "breaking",
+      "title": "ReactDOM.unmountComponentAtNode has been removed in React 19",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-reactdom-apis",
+      "description": "ReactDOM.unmountComponentAtNode has been removed in React 19. Use root.unmount() on the root created by createRoot.",
+      "fastFilter": ["unmountComponentAtNode"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "ReactDOM.unmountComponentAtNode"
+      },
+      "message": "`ReactDOM.unmountComponentAtNode` has been removed in React 19. Use `root.unmount()` instead.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (React 18 and earlier)\nimport ReactDOM from 'react-dom';\nReactDOM.unmountComponentAtNode(container);\n\n// ✅ AFTER (React 19)\nroot.unmount();\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["unmountComponentAtNode"],
+        "astPattern": {
+          "type": "callExpression",
+          "callee": "ReactDOM.unmountComponentAtNode"
+        }
+      },
+      "remediation": {
+        "summary": "Call root.unmount() on the instance returned by createRoot instead of ReactDOM.unmountComponentAtNode.",
+        "exampleBefore": "ReactDOM.unmountComponentAtNode(container);",
+        "exampleAfter": "root.unmount();"
+      }
+    },
+    {
+      "id": "react-19-removed-find-dom-node",
+      "severity": "error",
+      "category": "breaking",
+      "title": "ReactDOM.findDOMNode has been removed in React 19",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-reactdom-apis",
+      "description": "ReactDOM.findDOMNode has been removed in React 19. Pass a ref directly to the underlying DOM node.",
+      "fastFilter": ["findDOMNode"],
+      "astPattern": {
+        "type": "callExpression",
+        "callee": "ReactDOM.findDOMNode"
+      },
+      "message": "`ReactDOM.findDOMNode` has been removed in React 19. Use DOM `ref` instead.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nconst node = ReactDOM.findDOMNode(this);\n\n// ✅ AFTER\nconst nodeRef = useRef<HTMLDivElement>(null);\nreturn <div ref={nodeRef} />;\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["findDOMNode"],
+        "astPattern": {
+          "type": "callExpression",
+          "callee": "ReactDOM.findDOMNode"
+        }
+      },
+      "remediation": {
+        "summary": "Pass a DOM ref directly to the native element instead of calling ReactDOM.findDOMNode.",
+        "exampleBefore": "const el = ReactDOM.findDOMNode(componentRef.current);",
+        "exampleAfter": "const elRef = useRef<HTMLDivElement>(null);\n<div ref={elRef} />"
+      }
+    },
+    {
+      "id": "react-19-removed-proptypes",
+      "severity": "error",
+      "category": "breaking",
+      "title": "React.PropTypes has been removed from the core react package in React 19",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-react-apis",
+      "description": "Accessing PropTypes directly on React (React.PropTypes) has been removed. Use TypeScript or import PropTypes from the standalone 'prop-types' package.",
+      "fastFilter": ["React.PropTypes"],
+      "astPattern": {
+        "type": "memberExpression",
+        "object": "React",
+        "property": "PropTypes"
+      },
+      "message": "`React.PropTypes` is removed in React 19. Use TypeScript types or the `prop-types` package.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nMyComponent.propTypes = {\n  title: React.PropTypes.string\n};\n\n// ✅ AFTER\nimport PropTypes from 'prop-types';\nMyComponent.propTypes = {\n  title: PropTypes.string\n};\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["React.PropTypes"],
+        "astPattern": {
+          "type": "memberExpression",
+          "object": "React",
+          "property": "PropTypes"
+        }
+      },
+      "remediation": {
+        "summary": "Import PropTypes from 'prop-types' or migrate components to TypeScript interfaces.",
+        "exampleBefore": "MyComponent.propTypes = { name: React.PropTypes.string };",
+        "exampleAfter": "import PropTypes from 'prop-types';\nMyComponent.propTypes = { name: PropTypes.string };"
+      }
+    },
+    {
+      "id": "react-19-removed-string-refs",
+      "severity": "error",
+      "category": "breaking",
+      "title": "Legacy string refs have been removed in React 19",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-react-apis",
+      "description": "String refs (e.g. <input ref='myInput' /> and this.refs.myInput) are removed in React 19. Use callback refs or useRef / createRef.",
+      "fastFilter": ["ref="],
+      "astPattern": {
+        "type": "jsxAttribute",
+        "attribute": "ref",
+        "disallowLiteralString": true
+      },
+      "message": "String refs are removed in React 19. Use `useRef()` or callback refs.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\n<input ref=\"nameInput\" />\n\n// ✅ AFTER\nconst inputRef = useRef<HTMLInputElement>(null);\n<input ref={inputRef} />\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".jsx", ".tsx"],
+        "fastFilter": ["ref="],
+        "astPattern": {
+          "type": "jsxAttribute",
+          "attribute": "ref",
+          "disallowLiteralString": true
+        }
+      },
+      "remediation": {
+        "summary": "Replace string refs with useRef() hooks or callback refs.",
+        "exampleBefore": "<input ref=\"textInput\" />",
+        "exampleAfter": "const inputRef = useRef(null);\n<input ref={inputRef} />"
+      }
+    },
+    {
+      "id": "react-19-deprecated-lifecycle-methods",
+      "severity": "error",
+      "category": "breaking",
+      "title": "Legacy lifecycle methods (componentWillMount, componentWillReceiveProps, componentWillUpdate) removed",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-react-apis",
+      "description": "Legacy class lifecycle methods without UNSAFE_ prefix have been removed in React 19. Migrate to componentDidMount / componentDidUpdate or React Hooks.",
+      "fastFilter": ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"],
+      "astPattern": {
+        "type": "identifier",
+        "name": "componentWillReceiveProps",
+        "context": "method"
+      },
+      "message": "Legacy lifecycle methods like `componentWillReceiveProps` are removed in React 19.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\ncomponentWillReceiveProps(nextProps) {\n  this.setState({ count: nextProps.count });\n}\n\n// ✅ AFTER (componentDidUpdate or Hooks)\ncomponentDidUpdate(prevProps) {\n  if (prevProps.count !== this.props.count) {\n    this.setState({ count: this.props.count });\n  }\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["componentWillMount", "componentWillReceiveProps", "componentWillUpdate"],
+        "astPattern": {
+          "type": "identifier",
+          "name": "componentWillReceiveProps",
+          "context": "method"
+        }
+      },
+      "remediation": {
+        "summary": "Migrate legacy lifecycles to componentDidMount, componentDidUpdate, or convert class to a function component with useEffect.",
+        "exampleBefore": "componentWillReceiveProps(nextProps) { this.update(nextProps); }",
+        "exampleAfter": "componentDidUpdate(prevProps) { if (prevProps !== this.props) this.update(this.props); }"
+      }
+    },
+    {
+      "id": "react-19-use-action-state",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "useFormState replaced by useActionState in React 19",
+      "docsUrl": "https://react.dev/reference/react/useActionState",
+      "description": "In React 19, useFormState from 'react-dom' is deprecated in favor of useActionState from 'react'.",
+      "fastFilter": ["useFormState"],
+      "astPattern": {
+        "type": "import",
+        "source": "react-dom",
+        "specifiers": ["useFormState"]
+      },
+      "message": "`useFormState` is deprecated in React 19. Use `useActionState` from `'react'`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport { useFormState } from 'react-dom';\nconst [state, formAction] = useFormState(action, initialState);\n\n// ✅ AFTER\nimport { useActionState } from 'react';\nconst [state, formAction, isPending] = useActionState(action, initialState);\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["useFormState"],
+        "astPattern": {
+          "type": "import",
+          "source": "react-dom",
+          "specifiers": ["useFormState"]
+        }
+      },
+      "remediation": {
+        "summary": "Replace useFormState from 'react-dom' with useActionState imported from 'react'.",
+        "exampleBefore": "import { useFormState } from 'react-dom';",
+        "exampleAfter": "import { useActionState } from 'react';"
+      }
+    },
+    {
+      "id": "react-19-act-test-utils",
+      "severity": "error",
+      "category": "breaking",
+      "title": "act from 'react-dom/test-utils' moved to 'react' in React 19",
+      "docsUrl": "https://react.dev/blog/2024/04/25/react-19-upgrade-guide#removed-deprecated-reactdom-apis",
+      "description": "react-dom/test-utils has been deprecated and act has moved directly into the core 'react' package.",
+      "fastFilter": ["react-dom/test-utils"],
+      "astPattern": {
+        "type": "import",
+        "source": "react-dom/test-utils"
+      },
+      "message": "`react-dom/test-utils` is deprecated in React 19. Import `act` directly from `'react'`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport { act } from 'react-dom/test-utils';\n\n// ✅ AFTER\nimport { act } from 'react';\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["react-dom/test-utils"],
+        "astPattern": {
+          "type": "import",
+          "source": "react-dom/test-utils"
+        }
+      },
+      "remediation": {
+        "summary": "Import act from 'react' instead of 'react-dom/test-utils'.",
+        "exampleBefore": "import { act } from 'react-dom/test-utils';",
+        "exampleAfter": "import { act } from 'react';"
+      }
+    }
+  ]
+}

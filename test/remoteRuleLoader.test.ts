@@ -10,15 +10,26 @@ describe('RemoteRuleLoader', () => {
   const sampleManifest: RemoteRulesManifest = {
     nextjs: {
       '15': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-15.json',
-      '16': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-16.json'
+      '16': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-16.json',
+      '17': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-17.json'
     },
     next: {
       '15': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-15.json',
-      '16': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-16.json'
+      '16': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-16.json',
+      '17': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/nextjs-17.json'
     },
     react: {
       default: 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/react.json',
-      '19': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/react.json'
+      '19': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/react-19.json',
+      '20': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/react-20.json'
+    },
+    prisma: {
+      default: 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/prisma-6.json',
+      '6': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/prisma-6.json'
+    },
+    '@prisma/client': {
+      default: 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/prisma-6.json',
+      '6': 'https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/prisma-6.json'
     }
   };
 
@@ -61,6 +72,30 @@ describe('RemoteRuleLoader', () => {
       assert.equal(detected[0].majorVersion, '5');
     });
 
+    it('should detect prisma and @prisma/client packages', () => {
+      const packageJson = JSON.stringify({
+        dependencies: {
+          '@prisma/client': '^6.1.0'
+        },
+        devDependencies: {
+          prisma: '^6.1.0'
+        }
+      });
+
+      const detected = RemoteRuleLoader.detectTechnologies(packageJson);
+      assert.equal(detected.length, 2);
+
+      const clientTech = detected.find((d) => d.rawName === '@prisma/client');
+      assert.ok(clientTech);
+      assert.equal(clientTech.technology, 'prisma');
+      assert.equal(clientTech.majorVersion, '6');
+
+      const cliTech = detected.find((d) => d.rawName === 'prisma');
+      assert.ok(cliTech);
+      assert.equal(cliTech.technology, 'prisma');
+      assert.equal(cliTech.majorVersion, '6');
+    });
+
     it('should handle malformed JSON gracefully during detection', () => {
       const detected = RemoteRuleLoader.detectTechnologies('{ invalid json');
       assert.deepEqual(detected, []);
@@ -88,6 +123,36 @@ describe('RemoteRuleLoader', () => {
       const urlCanary = RemoteRuleLoader.resolveRulesUrl(sampleManifest, 'next', '16.0.0-canary.2');
       assert.ok(urlCanary);
       assert.ok(urlCanary.endsWith('/nextjs-16.json'));
+    });
+
+    it('Next.js 17 selects nextjs-17.json', () => {
+      const url = RemoteRuleLoader.resolveRulesUrl(sampleManifest, 'nextjs', '^17.0.0');
+      assert.ok(url);
+      assert.ok(url.endsWith('/nextjs-17.json'));
+
+      const urlAlias = RemoteRuleLoader.resolveRulesUrl(sampleManifest, 'next', '17.0.0-alpha.1');
+      assert.ok(urlAlias);
+      assert.ok(urlAlias.endsWith('/nextjs-17.json'));
+    });
+
+    it('React 19 and 20 select corresponding JSON files', () => {
+      const url19 = RemoteRuleLoader.resolveRulesUrl(sampleManifest, 'react', '^19.0.0');
+      assert.ok(url19);
+      assert.ok(url19.endsWith('/react-19.json'));
+
+      const url20 = RemoteRuleLoader.resolveRulesUrl(sampleManifest, 'react', '^20.0.0');
+      assert.ok(url20);
+      assert.ok(url20.endsWith('/react-20.json'));
+    });
+
+    it('Prisma 6 selects prisma-6.json via prisma and @prisma/client', () => {
+      const urlPrisma = RemoteRuleLoader.resolveRulesUrl(sampleManifest, 'prisma', '^6.1.0');
+      assert.ok(urlPrisma);
+      assert.ok(urlPrisma.endsWith('/prisma-6.json'));
+
+      const urlClient = RemoteRuleLoader.resolveRulesUrl(sampleManifest, '@prisma/client', '6.0.0');
+      assert.ok(urlClient);
+      assert.ok(urlClient.endsWith('/prisma-6.json'));
     });
 
     it('a technology with a default entry selects the default rules', () => {
@@ -149,6 +214,31 @@ describe('RemoteRuleLoader', () => {
       assert.equal(RemoteRuleLoader.validateRules(validRules), true);
       assert.equal(RemoteRuleLoader.validateRules([{ invalid: true }]), false);
       assert.equal(RemoteRuleLoader.validateRules('not array'), false);
+    });
+
+    it('should normalize and validate container-schema rule definitions', () => {
+      const containerPayload = {
+        framework: 'prisma',
+        fromVersion: '>=5.0.0 <6.0.0',
+        toVersion: '>=6.0.0',
+        rules: [
+          {
+            id: 'prisma-6-reject-on-not-found',
+            severity: 'error',
+            category: 'deprecated-api',
+            fastFilter: ['rejectOnNotFound'],
+            astPattern: { type: 'identifier', name: 'rejectOnNotFound' },
+            message: 'rejectOnNotFound removed'
+          }
+        ]
+      };
+      assert.equal(RemoteRuleLoader.validateRules(containerPayload), true);
+      const normalized = RemoteRuleLoader.normalizeRulesPayload(containerPayload);
+      assert.ok(normalized);
+      assert.equal(normalized.length, 1);
+      assert.equal(normalized[0].framework, 'prisma');
+      assert.equal(normalized[0].severity, 'breaking');
+      assert.deepEqual(normalized[0].detection.fastFilter, ['rejectOnNotFound']);
     });
   });
 
@@ -231,6 +321,22 @@ describe('RemoteRuleLoader', () => {
       assert.ok(loaded.length > 0, 'Should load rules for Next.js 16 and React');
       const hasNext16 = loaded.some((r) => r.id.startsWith('next-16'));
       assert.ok(hasNext16, 'Should have loaded Next.js 16 rules');
+    });
+
+    it('should successfully load Prisma 6, Next.js 17, and React 20 rules via manifest and local directory', async () => {
+      const registry = RuleRegistry.getInstance();
+      const loaded = await registry.loadRemoteRulesForProject(
+        JSON.stringify({ dependencies: { prisma: '^6.0.0', next: '^17.0.0', react: '^20.0.0' } }),
+        remoteRulesDir
+      );
+
+      assert.ok(loaded.length >= 14, 'Should load rules for Prisma 6, Next 17, and React 20');
+      const hasPrisma = loaded.some((r) => r.framework === 'prisma');
+      const hasNext17 = loaded.some((r) => r.id.startsWith('next-17'));
+      const hasReact20 = loaded.some((r) => r.id.startsWith('react-20'));
+      assert.ok(hasPrisma, 'Should have loaded Prisma 6 rules');
+      assert.ok(hasNext17, 'Should have loaded Next.js 17 rules');
+      assert.ok(hasReact20, 'Should have loaded React 20 rules');
     });
   });
 });

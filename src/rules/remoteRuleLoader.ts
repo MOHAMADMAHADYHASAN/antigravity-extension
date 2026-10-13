@@ -170,14 +170,99 @@ export class RemoteRuleLoader {
   }
 
   /**
-   * Validates array of MigrationRule objects
+   * Normalizes rules payload, supporting both top-level arrays and container schemas:
+   * { framework: "...", fromVersion: "...", toVersion: "...", rules: [...] }
+   */
+  public static normalizeRulesPayload(payload: unknown): MigrationRule[] | null {
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+
+    let rootFramework = '';
+    let rootFromVersion = '';
+    let rootToVersion = '';
+    let rawList: unknown[] = [];
+
+    if (Array.isArray(payload)) {
+      rawList = payload;
+    } else {
+      const container = payload as Record<string, unknown>;
+      if (!Array.isArray(container.rules)) {
+        return null;
+      }
+      rootFramework = typeof container.framework === 'string' ? container.framework : '';
+      rootFromVersion = typeof container.fromVersion === 'string' ? container.fromVersion : '';
+      rootToVersion = typeof container.toVersion === 'string' ? container.toVersion : '';
+      rawList = container.rules;
+    }
+
+    const normalized: MigrationRule[] = [];
+
+    for (const item of rawList) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+      const r = item as Record<string, unknown>;
+
+      const id = typeof r.id === 'string' ? r.id.trim() : '';
+      if (!id) continue;
+
+      const framework = typeof r.framework === 'string' && r.framework ? r.framework : rootFramework;
+      const fromVersion = typeof r.fromVersion === 'string' && r.fromVersion ? r.fromVersion : rootFromVersion;
+      const toVersion = typeof r.toVersion === 'string' && r.toVersion ? r.toVersion : rootToVersion;
+
+      if (!framework || !fromVersion || !toVersion) continue;
+
+      const rawSeverity = typeof r.severity === 'string' ? r.severity.toLowerCase() : 'breaking';
+      const severity = rawSeverity === 'error' || rawSeverity === 'breaking' ? 'breaking' : (rawSeverity === 'warning' ? 'warning' : 'deprecation');
+
+      const title = typeof r.title === 'string' && r.title ? r.title : id;
+      const docsUrl = typeof r.docsUrl === 'string' ? r.docsUrl : '';
+      const description = typeof r.description === 'string' ? r.description : (typeof r.message === 'string' ? r.message : '');
+
+      let detection: any = r.detection;
+      if (!detection || typeof detection !== 'object') {
+        detection = {
+          fileExtensions: Array.isArray(r.fileExtensions) ? r.fileExtensions : ['.js', '.jsx', '.ts', '.tsx'],
+          fastFilter: Array.isArray(r.fastFilter) ? r.fastFilter : [],
+          astPattern: typeof r.astPattern === 'object' && r.astPattern ? r.astPattern : {}
+        };
+      }
+
+      let remediation: any = r.remediation;
+      if (!remediation || typeof remediation !== 'object') {
+        remediation = {
+          summary: title,
+          exampleBefore: typeof r.exampleBefore === 'string' ? r.exampleBefore : '',
+          exampleAfter: typeof r.exampleAfter === 'string' ? r.exampleAfter : ''
+        };
+      }
+
+      normalized.push({
+        id,
+        framework,
+        fromVersion,
+        toVersion,
+        severity,
+        title,
+        docsUrl,
+        description,
+        detection,
+        remediation
+      });
+    }
+
+    return normalized;
+  }
+
+  /**
+   * Validates array of MigrationRule objects or container object
    */
   public static validateRules(rules: unknown): rules is MigrationRule[] {
-    if (!Array.isArray(rules)) {
+    const normalized = RemoteRuleLoader.normalizeRulesPayload(rules);
+    if (!normalized || normalized.length === 0) {
       return false;
     }
 
-    for (const r of rules) {
+    for (const r of normalized) {
       if (!r || typeof r !== 'object') return false;
       if (typeof r.id !== 'string' || !r.id.trim()) return false;
       if (typeof r.framework !== 'string') return false;
@@ -268,7 +353,9 @@ export class RemoteRuleLoader {
       nextjs: 'nextjs',
       react: 'react',
       typescript: 'typescript',
-      javascript: 'javascript'
+      javascript: 'javascript',
+      prisma: 'prisma',
+      '@prisma/client': 'prisma'
     };
 
     for (const [pkgName, versionVal] of Object.entries(deps)) {
@@ -304,10 +391,12 @@ export class RemoteRuleLoader {
     if (!manifest || !technology) return undefined;
 
     const normTech = technology.toLowerCase().trim();
-    // Support aliases (e.g. next <-> nextjs)
+    // Support aliases (e.g. next <-> nextjs, prisma <-> @prisma/client)
     const candidates = [normTech];
     if (normTech === 'next') candidates.push('nextjs');
     if (normTech === 'nextjs') candidates.push('next');
+    if (normTech === 'prisma') candidates.push('@prisma/client');
+    if (normTech === '@prisma/client') candidates.push('prisma');
 
     let techMap: Record<string, string> | undefined;
     for (const cand of candidates) {
@@ -358,9 +447,10 @@ export class RemoteRuleLoader {
     // 1. Try remote fetch
     try {
       const data = await RemoteRuleLoader.fetchJson<unknown>(url);
-      if (RemoteRuleLoader.validateRules(data)) {
-        RemoteRuleLoader.rulesCache.set(url, { rules: data, timestamp: now });
-        return data;
+      const normalized = RemoteRuleLoader.normalizeRulesPayload(data);
+      if (normalized && normalized.length > 0 && RemoteRuleLoader.validateRules(normalized)) {
+        RemoteRuleLoader.rulesCache.set(url, { rules: normalized, timestamp: now });
+        return normalized;
       }
     } catch {
       // Remote fetch failed; attempt local fallback
@@ -377,9 +467,10 @@ export class RemoteRuleLoader {
         try {
           const raw = fs.readFileSync(loc, 'utf-8');
           const parsed = JSON.parse(raw);
-          if (RemoteRuleLoader.validateRules(parsed)) {
-            RemoteRuleLoader.rulesCache.set(url, { rules: parsed, timestamp: now });
-            return parsed;
+          const normalized = RemoteRuleLoader.normalizeRulesPayload(parsed);
+          if (normalized && normalized.length > 0 && RemoteRuleLoader.validateRules(normalized)) {
+            RemoteRuleLoader.rulesCache.set(url, { rules: normalized, timestamp: now });
+            return normalized;
           }
         } catch {
           // ignore corrupted local fallback

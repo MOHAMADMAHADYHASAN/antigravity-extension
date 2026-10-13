@@ -1,236 +1,287 @@
-[
-  {
-    "id": "next-16-async-params",
-    "framework": "next",
-    "fromVersion": ">=15.0.0 <16.0.0",
-    "toVersion": ">=16.0.0",
-    "severity": "breaking",
-    "title": "Page and Layout params prop is now asynchronous in Next.js 16",
-    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
-    "description": "In Next.js 16, params passed to Pages, Layouts, generateMetadata, and Route Handlers is a Promise. Synchronously accessing properties on params without await or React.use() is deprecated and causes runtime failures.",
-    "detection": {
-      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+{
+  "framework": "next",
+  "fromVersion": ">=15.0.0 <16.0.0",
+  "toVersion": ">=16.0.0",
+  "rules": [
+    {
+      "id": "next-16-async-params",
+      "severity": "error",
+      "category": "breaking",
+      "title": "Page and Layout params prop is now asynchronous in Next.js 16",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "In Next.js 16, params passed to Pages, Layouts, generateMetadata, and Route Handlers is a Promise. Synchronously accessing properties on params without await or React.use() is deprecated and causes runtime failures.",
       "fastFilter": ["params.", "params["],
       "astPattern": {
         "type": "memberExpression",
         "object": "params"
+      },
+      "message": "Page and Layout `params` prop is now asynchronous in Next.js 16.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nexport default function Page({ params }: { params: { slug: string } }) {\n  const slug = params.slug;\n  return <div>Post: {slug}</div>;\n}\n\n// ✅ AFTER\nexport default async function Page({ params }: { params: Promise<{ slug: string }> }) {\n  const { slug } = await params;\n  return <div>Post: {slug}</div>;\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["params.", "params["],
+        "astPattern": {
+          "type": "memberExpression",
+          "object": "params"
+        }
+      },
+      "remediation": {
+        "summary": "Await params before accessing properties, e.g. const { slug } = await params;",
+        "exampleBefore": "export default function Page({ params }: { params: { slug: string } }) {\n  const slug = params.slug;\n  return <div>Post: {slug}</div>;\n}",
+        "exampleAfter": "export default async function Page({ params }: { params: Promise<{ slug: string }> }) {\n  const { slug } = await params;\n  return <div>Post: {slug}</div>;\n}"
       }
     },
-    "remediation": {
-      "summary": "Await params before accessing properties, e.g. const { slug } = await params;",
-      "exampleBefore": "export default function Page({ params }: { params: { slug: string } }) {\n  const slug = params.slug;\n  return <div>Post: {slug}</div>;\n}",
-      "exampleAfter": "export default async function Page({ params }: { params: Promise<{ slug: string }> }) {\n  const { slug } = await params;\n  return <div>Post: {slug}</div>;\n}"
-    }
-  },
-  {
-    "id": "next-16-async-search-params",
-    "framework": "next",
-    "fromVersion": ">=15.0.0 <16.0.0",
-    "toVersion": ">=16.0.0",
-    "severity": "breaking",
-    "title": "searchParams prop is now asynchronous in Next.js 16",
-    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
-    "description": "In Next.js 16, searchParams passed to Server Component pages is a Promise. Accessing properties synchronously without await is deprecated.",
-    "detection": {
-      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+    {
+      "id": "next-16-async-search-params",
+      "severity": "error",
+      "category": "breaking",
+      "title": "searchParams prop is now asynchronous in Next.js 16",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "In Next.js 16, searchParams passed to Server Component pages is a Promise. Accessing properties synchronously without await is deprecated.",
       "fastFilter": ["searchParams.", "searchParams["],
       "astPattern": {
         "type": "memberExpression",
         "object": "searchParams"
+      },
+      "message": "Page `searchParams` prop is now asynchronous in Next.js 16.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nexport default function Page({ searchParams }: { searchParams: { query?: string } }) {\n  const q = searchParams.query;\n  return <div>Search: {q}</div>;\n}\n\n// ✅ AFTER\nexport default async function Page({ searchParams }: { searchParams: Promise<{ query?: string }> }) {\n  const { query } = await searchParams;\n  return <div>Search: {query}</div>;\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["searchParams.", "searchParams["],
+        "astPattern": {
+          "type": "memberExpression",
+          "object": "searchParams"
+        }
+      },
+      "remediation": {
+        "summary": "Await searchParams before accessing query parameters.",
+        "exampleBefore": "export default function Page({ searchParams }: { searchParams: { query?: string } }) {\n  const q = searchParams.query;\n  return <div>Search: {query}</div>;\n}",
+        "exampleAfter": "export default async function Page({ searchParams }: { searchParams: Promise<{ query?: string }> }) {\n  const { query } = await searchParams;\n  return <div>Search: {query}</div>;\n}"
       }
     },
-    "remediation": {
-      "summary": "Await searchParams before accessing query parameters.",
-      "exampleBefore": "export default function Page({ searchParams }: { searchParams: { query?: string } }) {\n  const q = searchParams.query;\n  return <div>Search: {q}</div>;\n}",
-      "exampleAfter": "export default async function Page({ searchParams }: { searchParams: Promise<{ query?: string }> }) {\n  const { query } = await searchParams;\n  return <div>Search: {query}</div>;\n}"
-    }
-  },
-  {
-    "id": "next-16-middleware-to-proxy",
-    "framework": "next",
-    "fromVersion": ">=15.0.0 <16.0.0",
-    "toVersion": ">=16.0.0",
-    "severity": "breaking",
-    "title": "middleware convention replaced by proxy in Next.js 16",
-    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
-    "description": "The middleware.ts / middleware.js convention has been deprecated in favor of proxy.ts / proxy.js network boundary handlers running on the Node.js runtime.",
-    "detection": {
-      "fileExtensions": [".js", ".ts"],
+    {
+      "id": "next-16-middleware-to-proxy",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "middleware convention replaced by proxy in Next.js 16",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "The middleware.ts / middleware.js convention has been deprecated in favor of proxy.ts / proxy.js network boundary handlers running on the Node.js runtime.",
       "fastFilter": ["middleware"],
       "astPattern": {
         "type": "identifier",
         "name": "middleware",
-        "context": "method"
+        "context": "declaration"
+      },
+      "message": "The `middleware.ts` convention is deprecated in Next.js 16 in favor of `proxy.ts`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (middleware.ts)\nexport function middleware(request: Request) {\n  return NextResponse.next();\n}\n\n// ✅ AFTER (proxy.ts)\nexport default function proxy(request: Request) {\n  return NextResponse.next();\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".ts"],
+        "fastFilter": ["middleware"],
+        "astPattern": {
+          "type": "identifier",
+          "name": "middleware",
+          "context": "declaration"
+        }
+      },
+      "remediation": {
+        "summary": "Rename middleware.ts to proxy.ts and update handler export.",
+        "exampleBefore": "// middleware.ts\nexport function middleware(request: Request) {\n  return NextResponse.next();\n}",
+        "exampleAfter": "// proxy.ts\nexport default function proxy(request: Request) {\n  return NextResponse.next();\n}"
       }
     },
-    "remediation": {
-      "summary": "Rename middleware.ts to proxy.ts and update export function middleware to export function proxy.",
-      "exampleBefore": "import { NextResponse } from 'next/server';\n\nexport function middleware(request: Request) {\n  return NextResponse.next();\n}",
-      "exampleAfter": "import { NextResponse } from 'next/server';\n\nexport function proxy(request: Request) {\n  return NextResponse.next();\n}"
-    }
-  },
-  {
-    "id": "next-16-amp-removed",
-    "framework": "next",
-    "fromVersion": ">=15.0.0 <16.0.0",
-    "toVersion": ">=16.0.0",
-    "severity": "breaking",
-    "title": "AMP support has been completely removed in Next.js 16",
-    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
-    "description": "Next.js 16 completely removed Accelerated Mobile Pages (AMP) support and the useAmp hook from next/amp.",
-    "detection": {
-      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+    {
+      "id": "next-16-amp-removed",
+      "severity": "error",
+      "category": "breaking",
+      "title": "next/amp module has been completely removed in Next.js 16",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "AMP support has been removed in Next.js 16. Imports from 'next/amp' and useAmp() will throw build errors.",
       "fastFilter": ["next/amp"],
       "astPattern": {
         "type": "import",
         "source": "next/amp"
+      },
+      "message": "AMP support has been removed in Next.js 16. Remove imports from `next/amp`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport { useAmp } from 'next/amp';\nexport const config = { amp: true };\n\n// ✅ AFTER\n// Remove AMP exports and build responsive standard HTML/CSS\nexport default function Page() { return <div>Standard Page</div>; }\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["next/amp"],
+        "astPattern": {
+          "type": "import",
+          "source": "next/amp"
+        }
+      },
+      "remediation": {
+        "summary": "Remove next/amp import and migrate to responsive HTML components.",
+        "exampleBefore": "import { useAmp } from 'next/amp';\nexport const config = { amp: 'hybrid' };",
+        "exampleAfter": "// Remove next/amp import and use modern responsive design"
       }
     },
-    "remediation": {
-      "summary": "Remove imports from 'next/amp' and replace AMP markup with standard responsive HTML/CSS.",
-      "exampleBefore": "import { useAmp } from 'next/amp';\n\nexport default function Page() {\n  const isAmp = useAmp();\n  return <div>{isAmp ? 'AMP' : 'Standard'}</div>;\n}",
-      "exampleAfter": "export default function Page() {\n  return <div>Standard Responsive</div>;\n}"
-    }
-  },
-  {
-    "id": "next-16-unstable-cache-deprecated",
-    "framework": "next",
-    "fromVersion": ">=15.0.0 <16.0.0",
-    "toVersion": ">=16.0.0",
-    "severity": "deprecation",
-    "title": "unstable_cache is deprecated in favor of 'use cache' in Next.js 16",
-    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
-    "description": "Next.js 16 introduces Cache Components with the 'use cache' directive. The unstable_cache helper from next/cache is deprecated.",
-    "detection": {
-      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+    {
+      "id": "next-16-unstable-cache-deprecated",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "unstable_cache is deprecated in favor of 'use cache' directive in Next.js 16",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "unstable_cache from 'next/cache' is deprecated in favor of the new 'use cache' directive and cacheLife() / cacheTag() APIs.",
       "fastFilter": ["unstable_cache"],
       "astPattern": {
         "type": "callExpression",
         "callee": "unstable_cache"
+      },
+      "message": "`unstable_cache` is deprecated in Next.js 16 in favor of `'use cache'`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport { unstable_cache } from 'next/cache';\nconst getData = unstable_cache(async () => fetchUser(id), ['users']);\n\n// ✅ AFTER\nasync function getData(id: string) {\n  'use cache';\n  return fetchUser(id);\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["unstable_cache"],
+        "astPattern": {
+          "type": "callExpression",
+          "callee": "unstable_cache"
+        }
+      },
+      "remediation": {
+        "summary": "Replace unstable_cache with 'use cache' directive or fetch cache tags.",
+        "exampleBefore": "import { unstable_cache } from 'next/cache';\nconst getCached = unstable_cache(async () => db.query(), ['tag']);",
+        "exampleAfter": "async function getCached() {\n  'use cache';\n  return db.query();\n}"
       }
     },
-    "remediation": {
-      "summary": "Adopt the 'use cache' directive with cacheLife() instead of unstable_cache().",
-      "exampleBefore": "import { unstable_cache } from 'next/cache';\n\nconst getCachedData = unstable_cache(async () => fetchDb(), ['data-key']);",
-      "exampleAfter": "async function getCachedData() {\n  'use cache';\n  return fetchDb();\n}"
-    }
-  },
-  {
-    "id": "next-16-revalidate-tag-profile",
-    "framework": "next",
-    "fromVersion": ">=15.0.0 <16.0.0",
-    "toVersion": ">=16.0.0",
-    "severity": "deprecation",
-    "title": "revalidateTag profile changes in Next.js 16",
-    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
-    "description": "In Next.js 16 Cache Components model, revalidateTag is complemented or replaced by updateTag() and cacheTag() for granular invalidation.",
-    "detection": {
-      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+    {
+      "id": "next-16-revalidate-tag",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "revalidateTag profile changed; use updateTag / cacheTag",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "revalidateTag profile changed in Next.js 16. Use updateTag for read-your-writes or cacheTag for tag management.",
       "fastFilter": ["revalidateTag"],
       "astPattern": {
         "type": "callExpression",
         "callee": "revalidateTag"
+      },
+      "message": "`revalidateTag` has changed in Next.js 16. Use `updateTag()` for instant cache purging.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nimport { revalidateTag } from 'next/cache';\nrevalidateTag('posts');\n\n// ✅ AFTER\nimport { updateTag } from 'next/cache';\nupdateTag('posts');\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["revalidateTag"],
+        "astPattern": {
+          "type": "callExpression",
+          "callee": "revalidateTag"
+        }
+      },
+      "remediation": {
+        "summary": "Review revalidateTag calls and migrate to updateTag for read-your-writes consistency.",
+        "exampleBefore": "import { revalidateTag } from 'next/cache';\nrevalidateTag('products');",
+        "exampleAfter": "import { updateTag } from 'next/cache';\nupdateTag('products');"
       }
     },
-    "remediation": {
-      "summary": "Review revalidateTag usage and migrate to updateTag or cacheTag for Cache Components.",
-      "exampleBefore": "import { revalidateTag } from 'next/cache';\n\nrevalidateTag('collection');",
-      "exampleAfter": "import { updateTag } from 'next/cache';\n\nupdateTag('collection');"
-    }
-  },
-  {
-    "id": "next-16-runtime-config-removed",
-    "framework": "next",
-    "fromVersion": ">=15.0.0 <16.0.0",
-    "toVersion": ">=16.0.0",
-    "severity": "breaking",
-    "title": "serverRuntimeConfig and publicRuntimeConfig removed from next.config.js",
-    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
-    "description": "serverRuntimeConfig and publicRuntimeConfig are removed in Next.js 16. Standard environment variables (process.env and NEXT_PUBLIC_) should be used instead.",
-    "detection": {
-      "fileExtensions": [".js", ".mjs", ".ts"],
+    {
+      "id": "next-16-server-runtime-config",
+      "severity": "error",
+      "category": "breaking",
+      "title": "serverRuntimeConfig and publicRuntimeConfig removed from next.config.js in Next.js 16",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "serverRuntimeConfig and publicRuntimeConfig in next.config.js have been completely removed. Use process.env directly or NEXT_PUBLIC_ env variables.",
       "fastFilter": ["serverRuntimeConfig"],
       "astPattern": {
         "type": "identifier",
         "name": "serverRuntimeConfig",
         "context": "property"
+      },
+      "message": "`serverRuntimeConfig` and `publicRuntimeConfig` have been removed in Next.js 16.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (next.config.js)\nmodule.exports = {\n  serverRuntimeConfig: { secretKey: process.env.SECRET }\n};\n\n// ✅ AFTER\n// Access environment variables directly\nconst secretKey = process.env.SECRET;\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".mjs", ".ts"],
+        "fastFilter": ["serverRuntimeConfig"],
+        "astPattern": {
+          "type": "identifier",
+          "name": "serverRuntimeConfig",
+          "context": "property"
+        }
+      },
+      "remediation": {
+        "summary": "Remove serverRuntimeConfig and publicRuntimeConfig; read process.env directly.",
+        "exampleBefore": "const nextConfig = {\n  serverRuntimeConfig: { myKey: 'secret' },\n};",
+        "exampleAfter": "const nextConfig = {};\n// Use process.env.MY_KEY in server code"
       }
     },
-    "remediation": {
-      "summary": "Remove serverRuntimeConfig and access process.env directly.",
-      "exampleBefore": "module.exports = {\n  serverRuntimeConfig: { secretKey: 'secret' },\n  publicRuntimeConfig: { apiBase: 'https://api.example.com' }\n};",
-      "exampleAfter": "// Access process.env.SECRET_KEY directly\nmodule.exports = {};"
-    }
-  },
-  {
-    "id": "next-16-turbopack-custom-webpack",
-    "framework": "next",
-    "fromVersion": ">=15.0.0 <16.0.0",
-    "toVersion": ">=16.0.0",
-    "severity": "warning",
-    "title": "Custom webpack config in next.config.js with Turbopack as default",
-    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
-    "description": "Turbopack is the default bundler in Next.js 16. Custom webpack configuration in next.config.js will not apply to Turbopack without explicit turbopack config or running next build --webpack.",
-    "detection": {
-      "fileExtensions": [".js", ".mjs", ".ts"],
+    {
+      "id": "next-16-turbopack-webpack",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "Custom webpack config detected with default Turbopack compiler in Next.js 16",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "In Next.js 16, Turbopack is the default bundler for both dev and production. Custom webpack functions in next.config.js will be ignored unless Turbopack equivalents or --webpack flag is provided.",
       "fastFilter": ["webpack"],
       "astPattern": {
         "type": "identifier",
         "name": "webpack",
         "context": "property"
+      },
+      "message": "Custom `webpack` configuration in `next.config.js` is ignored under Turbopack in Next.js 16.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE (next.config.js)\nmodule.exports = {\n  webpack: (config) => { return config; }\n};\n\n// ✅ AFTER\nmodule.exports = {\n  turbopack: { rules: { /* Turbopack loader rules */ } }\n};\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".mjs", ".ts"],
+        "fastFilter": ["webpack"],
+        "astPattern": {
+          "type": "identifier",
+          "name": "webpack",
+          "context": "property"
+        }
+      },
+      "remediation": {
+        "summary": "Migrate custom webpack rules to Turbopack loader configuration in next.config.js.",
+        "exampleBefore": "const nextConfig = {\n  webpack(config) { return config; },\n};",
+        "exampleAfter": "const nextConfig = {\n  turbopack: {},\n};"
       }
     },
-    "remediation": {
-      "summary": "Configure turbopack in next.config.js, or run builds with --webpack flag.",
-      "exampleBefore": "module.exports = {\n  webpack: (config) => {\n    config.resolve.alias['@'] = './src';\n    return config;\n  }\n};",
-      "exampleAfter": "module.exports = {\n  turbopack: {\n    resolveAlias: {\n      '@': './src'\n    }\n  }\n};"
-    }
-  },
-  {
-    "id": "next-16-edge-runtime-proxy",
-    "framework": "next",
-    "fromVersion": ">=15.0.0 <16.0.0",
-    "toVersion": ">=16.0.0",
-    "severity": "breaking",
-    "title": "Edge runtime on middleware/proxy deprecated in Next.js 16",
-    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
-    "description": "In Next.js 16, proxy handlers run exclusively on the Node.js runtime to streamline architecture and network boundaries. export const runtime = 'edge' is no longer supported for proxy/middleware.",
-    "detection": {
-      "fileExtensions": [".js", ".ts"],
+    {
+      "id": "next-16-edge-runtime-proxy",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "export const runtime = 'edge' on middleware is deprecated in Next.js 16",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "Running middleware on Edge runtime is deprecated in Next.js 16. Proxy handlers run by default on Node.js runtime for broad npm package compatibility.",
       "fastFilter": ["runtime"],
       "astPattern": {
         "type": "identifier",
         "name": "runtime",
-        "context": "property"
+        "context": "declaration"
+      },
+      "message": "`export const runtime = 'edge'` in middleware is deprecated in Next.js 16.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nexport const runtime = 'edge';\nexport function middleware(req) {}\n\n// ✅ AFTER\n// Run on Node.js runtime by default\nexport default function proxy(req) {}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".ts"],
+        "fastFilter": ["runtime"],
+        "astPattern": {
+          "type": "identifier",
+          "name": "runtime",
+          "context": "declaration"
+        }
+      },
+      "remediation": {
+        "summary": "Remove runtime = 'edge' from proxy / middleware and use standard Node.js runtime.",
+        "exampleBefore": "export const runtime = 'edge';",
+        "exampleAfter": "// Removed: proxy runs on Node.js runtime with full native support"
       }
     },
-    "remediation": {
-      "summary": "Remove export const runtime = 'edge' from your proxy / middleware file.",
-      "exampleBefore": "export const runtime = 'edge';\nexport function middleware() { ... }",
-      "exampleAfter": "export function proxy() { ... }"
-    }
-  },
-  {
-    "id": "next-16-legacy-get-initial-props",
-    "framework": "next",
-    "fromVersion": ">=15.0.0 <16.0.0",
-    "toVersion": ">=16.0.0",
-    "severity": "deprecation",
-    "title": "getInitialProps is deprecated in Next.js 16",
-    "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
-    "description": "getInitialProps in the Pages Router is deprecated. Migrate to getServerSideProps, getStaticProps, or App Router Server Components.",
-    "detection": {
-      "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+    {
+      "id": "next-16-pages-get-initial-props",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "getInitialProps in Pages router is deprecated in Next.js 16",
+      "docsUrl": "https://nextjs.org/docs/app/building-your-application/upgrading",
+      "description": "getInitialProps in Pages router is deprecated in Next.js 16. Use getStaticProps / getServerSideProps or migrate page to the App Router.",
       "fastFilter": ["getInitialProps"],
       "astPattern": {
         "type": "identifier",
-        "name": "getInitialProps"
+        "name": "getInitialProps",
+        "context": "property"
+      },
+      "message": "`getInitialProps` is deprecated in Next.js 16 in favor of App Router.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```typescript\n// ❌ BEFORE\nPage.getInitialProps = async (ctx) => { return { data: 123 }; };\n\n// ✅ AFTER (App Router page.tsx)\nexport default async function Page() {\n  const data = await fetchData();\n  return <div>{data}</div>;\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".js", ".jsx", ".ts", ".tsx"],
+        "fastFilter": ["getInitialProps"],
+        "astPattern": {
+          "type": "identifier",
+          "name": "getInitialProps",
+          "context": "property"
+        }
+      },
+      "remediation": {
+        "summary": "Migrate getInitialProps to getServerSideProps or convert to App Router Server Components.",
+        "exampleBefore": "MyPage.getInitialProps = async () => ({ title: 'Home' });",
+        "exampleAfter": "export async function getServerSideProps() {\n  return { props: { title: 'Home' } };\n}"
       }
-    },
-    "remediation": {
-      "summary": "Replace getInitialProps with getServerSideProps or migrate page to the App Router.",
-      "exampleBefore": "Page.getInitialProps = async (ctx) => {\n  return { data: 'test' };\n};",
-      "exampleAfter": "export async function getServerSideProps() {\n  return { props: { data: 'test' } };\n}"
     }
-  }
-]
+  ]
+}
