@@ -16,6 +16,22 @@
     "Programming Languages",
     "Other"
   ],
+  "keywords": [
+    "react",
+    "react 19",
+    "react 20",
+    "nextjs",
+    "next 15",
+    "next 16",
+    "next 17",
+    "prisma",
+    "prisma 6",
+    "migration",
+    "upgrade",
+    "codemod",
+    "breaking changes",
+    "ast"
+  ],
   "main": "./dist/extension.js",
   "activationEvents": [
     "onStartupFinished",
