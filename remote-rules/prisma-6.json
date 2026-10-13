@@ -141,6 +141,87 @@
         "exampleBefore": "await prisma.$executeRawUnsafe(`DELETE FROM users WHERE id = ${id}`);",
         "exampleAfter": "await prisma.$executeRaw`DELETE FROM users WHERE id = ${id}`;"
       }
+    },
+    {
+      "id": "prisma-6-schema-driver-adapters-ga",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "driverAdapters preview feature is GA in Prisma 6",
+      "docsUrl": "https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-6#driver-adapters-are-now-generally-available",
+      "description": "Driver Adapters graduated from preview to General Availability (GA) in Prisma 6. Remove 'driverAdapters' from generator previewFeatures.",
+      "fastFilter": ["driverAdapters"],
+      "astPattern": {
+        "type": "previewFeature",
+        "feature": "driverAdapters"
+      },
+      "message": "`driverAdapters` preview feature is GA in Prisma 6 and no longer needed in `previewFeatures`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```prisma\n// ❌ BEFORE (Prisma 5)\ngenerator client {\n  provider        = \"prisma-client-js\"\n  previewFeatures = [\"driverAdapters\"]\n}\n\n// ✅ AFTER (Prisma 6)\ngenerator client {\n  provider = \"prisma-client-js\"\n}\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".prisma"],
+        "fastFilter": ["driverAdapters"],
+        "astPattern": {
+          "type": "previewFeature",
+          "feature": "driverAdapters"
+        }
+      },
+      "remediation": {
+        "summary": "Remove 'driverAdapters' from previewFeatures in generator client block.",
+        "exampleBefore": "previewFeatures = [\"driverAdapters\"]",
+        "exampleAfter": "// Removed 'driverAdapters'"
+      }
+    },
+    {
+      "id": "prisma-6-schema-relation-joins-ga",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "relationJoins preview feature is GA in Prisma 6",
+      "docsUrl": "https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-6#relation-joins-are-now-generally-available",
+      "description": "Relation Joins graduated to General Availability (GA) in Prisma 6. Remove 'relationJoins' from previewFeatures.",
+      "fastFilter": ["relationJoins"],
+      "astPattern": {
+        "type": "previewFeature",
+        "feature": "relationJoins"
+      },
+      "message": "`relationJoins` is now Generally Available in Prisma 6 and does not require previewFeatures.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```prisma\n// ❌ BEFORE\npreviewFeatures = [\"relationJoins\"]\n\n// ✅ AFTER (Prisma 6)\n// Removed 'relationJoins'\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".prisma"],
+        "fastFilter": ["relationJoins"],
+        "astPattern": {
+          "type": "previewFeature",
+          "feature": "relationJoins"
+        }
+      },
+      "remediation": {
+        "summary": "Remove 'relationJoins' from previewFeatures list.",
+        "exampleBefore": "previewFeatures = [\"relationJoins\"]",
+        "exampleAfter": "// Removed 'relationJoins'"
+      }
+    },
+    {
+      "id": "prisma-6-schema-json-protocol-deprecated",
+      "severity": "warning",
+      "category": "deprecation",
+      "title": "jsonProtocol preview feature is default and obsolete in Prisma 6",
+      "docsUrl": "https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-versions/upgrading-to-prisma-6",
+      "description": "The JSON wire protocol is the default protocol in Prisma 6. The jsonProtocol previewFeatures flag is deprecated and obsolete.",
+      "fastFilter": ["jsonProtocol"],
+      "astPattern": {
+        "type": "previewFeature",
+        "feature": "jsonProtocol"
+      },
+      "message": "`jsonProtocol` is default in Prisma 6 and should be removed from `previewFeatures`.\n\n<details><summary><b>Before / After Example</b></summary>\n\n```prisma\n// ❌ BEFORE\npreviewFeatures = [\"jsonProtocol\"]\n\n// ✅ AFTER (Prisma 6)\n// Removed 'jsonProtocol'\n```\n</details>",
+      "detection": {
+        "fileExtensions": [".prisma"],
+        "fastFilter": ["jsonProtocol"],
+        "astPattern": {
+          "type": "previewFeature",
+          "feature": "jsonProtocol"
+        }
+      },
+      "remediation": {
+        "summary": "Remove 'jsonProtocol' from previewFeatures in schema.prisma.",
+        "exampleBefore": "previewFeatures = [\"jsonProtocol\"]",
+        "exampleAfter": "// Removed 'jsonProtocol'"
+      }
     }
   ]
 }

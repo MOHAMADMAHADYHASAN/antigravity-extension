@@ -107,8 +107,11 @@
             "**/.git/**",
             "**/.next/**",
             "**/generated/**",
-            "**/prisma/**",
             "**/.prisma/**",
+            "**/@prisma/client/**",
+            "**/prisma/runtime/**",
+            "**/prisma/client/**",
+            "**/prisma/migrations/**",
             "**/*.min.js"
           ],
           "description": "Glob patterns to exclude from codebase scans."
@@ -150,8 +153,11 @@
             "**/.git/**",
             "**/.next/**",
             "**/generated/**",
-            "**/prisma/**",
             "**/.prisma/**",
+            "**/@prisma/client/**",
+            "**/prisma/runtime/**",
+            "**/prisma/client/**",
+            "**/prisma/migrations/**",
             "**/*.min.js"
           ],
           "description": "(Legacy) Glob patterns to exclude from codebase scans."
