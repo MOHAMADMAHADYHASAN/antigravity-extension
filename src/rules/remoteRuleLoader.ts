@@ -76,8 +76,9 @@ export class RemoteRuleLoader {
   public static getManifestUrl(): string {
     try {
       if (vscodeModule?.workspace) {
-        const config = vscodeModule.workspace.getConfiguration('antigravity');
-        const customUrl = config.get<string>('remoteManifestUrl');
+        const config = vscodeModule.workspace.getConfiguration('upgradelens');
+        const legacyConfig = vscodeModule.workspace.getConfiguration('antigravity');
+        const customUrl = config.get<string>('remoteManifestUrl') ?? legacyConfig.get<string>('remoteManifestUrl');
         if (customUrl && typeof customUrl === 'string' && customUrl.trim()) {
           return customUrl.trim();
         }
@@ -108,7 +109,7 @@ export class RemoteRuleLoader {
         url,
         {
           headers: {
-            'User-Agent': 'Antigravity-VSCode-Extension/0.1.6',
+            'User-Agent': 'UpgradeLens-VSCode-Extension/0.1.8',
             Accept: 'application/json'
           }
         },

@@ -1,7 +1,7 @@
 {
-  "name": "antigravity",
-  "displayName": "Antigravity - Framework Migration Assistant",
-  "description": "Scans your codebase on framework upgrades (Next.js, React, etc.) and generates actionable migration reports.",
+  "name": "upgradelens",
+  "displayName": "UpgradeLens - Framework Migration Assistant",
+  "description": "Scans your codebase on framework upgrades (Next.js, React, Prisma, etc.) and generates actionable migration reports.",
   "version": "0.1.8",
   "publisher": "antigravity",
   "repository": {
@@ -20,6 +20,10 @@
   "activationEvents": [
     "onStartupFinished",
     "workspaceContains:package.json",
+    "onCommand:upgradelens.scanProject",
+    "onCommand:upgradelens.customScan",
+    "onCommand:upgradelens.inspectDependencies",
+    "onCommand:upgradelens.saveReport",
     "onCommand:antigravity.scanProject",
     "onCommand:antigravity.customScan",
     "onCommand:antigravity.inspectDependencies",
@@ -28,30 +32,50 @@
   "contributes": {
     "commands": [
       {
-        "command": "antigravity.scanProject",
+        "command": "upgradelens.scanProject",
         "title": "Run Migration Scan",
-        "category": "Antigravity"
+        "category": "UpgradeLens"
+      },
+      {
+        "command": "upgradelens.customScan",
+        "title": "Run Custom Version Scan",
+        "category": "UpgradeLens"
+      },
+      {
+        "command": "upgradelens.inspectDependencies",
+        "title": "Inspect Tracked Dependencies",
+        "category": "UpgradeLens"
+      },
+      {
+        "command": "upgradelens.saveReport",
+        "title": "Save Migration Report to File",
+        "category": "UpgradeLens"
+      },
+      {
+        "command": "antigravity.scanProject",
+        "title": "Run Migration Scan (Legacy Alias)",
+        "category": "UpgradeLens"
       },
       {
         "command": "antigravity.customScan",
-        "title": "Run Custom Version Scan",
-        "category": "Antigravity"
+        "title": "Run Custom Version Scan (Legacy Alias)",
+        "category": "UpgradeLens"
       },
       {
         "command": "antigravity.inspectDependencies",
-        "title": "Inspect Tracked Dependencies",
-        "category": "Antigravity"
+        "title": "Inspect Tracked Dependencies (Legacy Alias)",
+        "category": "UpgradeLens"
       },
       {
         "command": "antigravity.saveReport",
-        "title": "Save Migration Report to File",
-        "category": "Antigravity"
+        "title": "Save Migration Report to File (Legacy Alias)",
+        "category": "UpgradeLens"
       }
     ],
     "configuration": {
-      "title": "Antigravity",
+      "title": "UpgradeLens",
       "properties": {
-        "antigravity.autoScanOnDependencyChange": {
+        "upgradelens.autoScanOnDependencyChange": {
           "type": "string",
           "enum": [
             "ask",
@@ -59,19 +83,19 @@
             "never"
           ],
           "default": "ask",
-          "description": "How Antigravity should respond when dependency version upgrades are detected."
+          "description": "How UpgradeLens should respond when dependency version upgrades are detected."
         },
-        "antigravity.saveReportToFile": {
+        "upgradelens.saveReportToFile": {
           "type": "boolean",
           "default": false,
           "description": "Whether to automatically save migration reports as physical files in the workspace."
         },
-        "antigravity.reportOutputPath": {
+        "upgradelens.reportOutputPath": {
           "type": "string",
           "default": "MIGRATION_REPORT.md",
           "description": "File path where migration reports will be saved when enabled."
         },
-        "antigravity.excludeGlobs": {
+        "upgradelens.excludeGlobs": {
           "type": "array",
           "items": {
             "type": "string"
@@ -89,10 +113,53 @@
           ],
           "description": "Glob patterns to exclude from codebase scans."
         },
-        "antigravity.remoteManifestUrl": {
+        "upgradelens.remoteManifestUrl": {
           "type": "string",
           "default": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/manifest.json",
           "description": "URL of the central manifest.json for version-based remote rules loading."
+        },
+        "antigravity.autoScanOnDependencyChange": {
+          "type": "string",
+          "enum": [
+            "ask",
+            "always",
+            "never"
+          ],
+          "default": "ask",
+          "description": "(Legacy) How UpgradeLens should respond when dependency version upgrades are detected."
+        },
+        "antigravity.saveReportToFile": {
+          "type": "boolean",
+          "default": false,
+          "description": "(Legacy) Whether to automatically save migration reports as physical files in the workspace."
+        },
+        "antigravity.reportOutputPath": {
+          "type": "string",
+          "default": "MIGRATION_REPORT.md",
+          "description": "(Legacy) File path where migration reports will be saved when enabled."
+        },
+        "antigravity.excludeGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/.git/**",
+            "**/.next/**",
+            "**/generated/**",
+            "**/prisma/**",
+            "**/.prisma/**",
+            "**/*.min.js"
+          ],
+          "description": "(Legacy) Glob patterns to exclude from codebase scans."
+        },
+        "antigravity.remoteManifestUrl": {
+          "type": "string",
+          "default": "https://raw.githubusercontent.com/MOHAMADMAHADYHASAN/antigravity-extension/main/remote-rules/manifest.json",
+          "description": "(Legacy) URL of the central manifest.json for version-based remote rules loading."
         }
       }
     }

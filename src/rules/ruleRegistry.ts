@@ -157,7 +157,7 @@ export class RuleRegistry {
         const response = await globalThis.fetch(url, {
           signal: controller.signal,
           headers: {
-            'User-Agent': 'Antigravity-VSCode-Extension',
+            'User-Agent': 'UpgradeLens-VSCode-Extension',
             Accept: 'application/json'
           }
         });
@@ -177,7 +177,7 @@ export class RuleRegistry {
         url,
         {
           headers: {
-            'User-Agent': 'Antigravity-VSCode-Extension',
+            'User-Agent': 'UpgradeLens-VSCode-Extension',
             Accept: 'application/json'
           }
         },

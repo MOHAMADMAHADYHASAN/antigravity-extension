@@ -90,7 +90,7 @@ describe('End-to-End Migration Flow', () => {
       upgradeDetails: upgradeTargets
     });
 
-    assert.ok(markdownReport.includes('Antigravity Migration Report'));
+    assert.ok(markdownReport.includes('UpgradeLens Migration Report'));
     assert.ok(markdownReport.includes('**next** (^14.2.5 → ^15.0.0)'));
     assert.ok(markdownReport.includes('**react** (^18.2.0 → ^19.0.0)'));
     assert.ok(markdownReport.includes('Total Issues Flagged** | **7**'));

@@ -112,8 +112,9 @@ export class DependencyWatcher implements vscode.Disposable {
    * Prompts the user with an upgrade notification
    */
   private async notifyUpgrades(upgrades: DependencyDiff[]): Promise<void> {
-    const config = vscode.workspace.getConfiguration('antigravity');
-    const autoScan = config.get<string>('autoScanOnDependencyChange', 'ask');
+    const config = vscode.workspace.getConfiguration('upgradelens');
+    const legacyConfig = vscode.workspace.getConfiguration('antigravity');
+    const autoScan = config.get<string>('autoScanOnDependencyChange') ?? legacyConfig.get<string>('autoScanOnDependencyChange', 'ask');
 
     if (autoScan === 'never') {
       return;
@@ -122,19 +123,19 @@ export class DependencyWatcher implements vscode.Disposable {
     const summary = upgrades.map((u) => `${u.name} (${u.oldVersion} → ${u.newVersion})`).join(', ');
 
     if (autoScan === 'always') {
-      vscode.window.showInformationMessage(`Antigravity: Detected upgrade for ${summary}. Running scan...`);
-      await vscode.commands.executeCommand('antigravity.scanProject');
+      vscode.window.showInformationMessage(`UpgradeLens: Detected upgrade for ${summary}. Running scan...`);
+      await vscode.commands.executeCommand('upgradelens.scanProject');
       return;
     }
 
     const choice = await vscode.window.showInformationMessage(
-      `Antigravity detected framework upgrade: ${summary}. Run migration scan now?`,
+      `UpgradeLens detected framework upgrade: ${summary}. Run migration scan now?`,
       'Run Scan',
       'Later'
     );
 
     if (choice === 'Run Scan') {
-      await vscode.commands.executeCommand('antigravity.scanProject');
+      await vscode.commands.executeCommand('upgradelens.scanProject');
     }
   }
 

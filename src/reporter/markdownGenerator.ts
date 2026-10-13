@@ -18,7 +18,7 @@ export class MarkdownGenerator {
     const { workspaceRoot = '', upgradeDetails = [] } = options;
     const now = new Date().toLocaleString();
 
-    let md = '# 🚀 Antigravity Migration Report\n\n';
+    let md = '# 🚀 UpgradeLens Migration Report\n\n';
 
     // 1. Overview Table
     md += '## 📋 Overview\n\n';
@@ -50,7 +50,7 @@ export class MarkdownGenerator {
 
     // 2. Summary of Findings
     md += '## ⚠️ Summary of Interventions Required\n\n';
-    md += `Antigravity identified **${result.issues.length} location(s)** across **${result.filesWithIssues} file(s)** that require manual code updates before upgrading.\n\n`;
+    md += `UpgradeLens identified **${result.issues.length} location(s)** across **${result.filesWithIssues} file(s)** that require manual code updates before upgrading.\n\n`;
 
     // Group issues by Rule ID
     const issuesByRule = new Map<string, ScanIssue[]>();
@@ -115,7 +115,7 @@ export class MarkdownGenerator {
     md += '## 💡 Next Steps\n\n';
     md += '1. Click on the file links above to jump directly to each flagged line in VS Code.\n';
     md += '2. Apply the recommended replacements using the code examples.\n';
-    md += '3. Once resolved, re-run `Antigravity: Run Migration Scan` to ensure all items are checked off.\n';
+    md += '3. Once resolved, re-run `UpgradeLens: Run Migration Scan` to ensure all items are checked off.\n';
 
     return md;
   }

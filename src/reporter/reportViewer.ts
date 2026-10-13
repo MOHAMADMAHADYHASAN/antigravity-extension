@@ -42,13 +42,14 @@ export class ReportViewer {
       }
 
       // Check auto-save setting
-      const config = vscode.workspace.getConfiguration('antigravity');
-      const autoSave = config.get<boolean>('saveReportToFile', false);
+      const config = vscode.workspace.getConfiguration('upgradelens');
+      const legacyConfig = vscode.workspace.getConfiguration('antigravity');
+      const autoSave = config.get<boolean>('saveReportToFile') ?? legacyConfig.get<boolean>('saveReportToFile', false);
       if (autoSave) {
         await ReportViewer.saveReportToFile();
       }
     } catch (err) {
-      vscode.window.showErrorMessage(`Antigravity: Failed to display migration report: ${err}`);
+      vscode.window.showErrorMessage(`UpgradeLens: Failed to display migration report: ${err}`);
     }
   }
 
@@ -58,12 +59,13 @@ export class ReportViewer {
   public static async saveReportToFile(): Promise<string | undefined> {
     const content = ReportViewer.getLastReport();
     if (!content) {
-      vscode.window.showWarningMessage('Antigravity: No migration report available to save.');
+      vscode.window.showWarningMessage('UpgradeLens: No migration report available to save.');
       return undefined;
     }
 
-    const config = vscode.workspace.getConfiguration('antigravity');
-    const outputPathSetting = config.get<string>('reportOutputPath', 'MIGRATION_REPORT.md');
+    const config = vscode.workspace.getConfiguration('upgradelens');
+    const legacyConfig = vscode.workspace.getConfiguration('antigravity');
+    const outputPathSetting = config.get<string>('reportOutputPath') ?? legacyConfig.get<string>('reportOutputPath', 'MIGRATION_REPORT.md');
 
     const workspaceRoot =
       vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || process.cwd();
@@ -79,7 +81,7 @@ export class ReportViewer {
 
       fs.writeFileSync(targetPath, content, 'utf-8');
       vscode.window.showInformationMessage(
-        `Antigravity: Migration report saved to ${path.basename(targetPath)}`,
+        `UpgradeLens: Migration report saved to ${path.basename(targetPath)}`,
         'Open File'
       ).then(async (selection) => {
         if (selection === 'Open File') {
@@ -90,7 +92,7 @@ export class ReportViewer {
 
       return targetPath;
     } catch (err) {
-      vscode.window.showErrorMessage(`Antigravity: Failed to save report: ${err}`);
+      vscode.window.showErrorMessage(`UpgradeLens: Failed to save report: ${err}`);
       return undefined;
     }
   }
